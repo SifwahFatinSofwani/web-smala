@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Alumni — Portal Alumni SMAN 5 Samarinda</title>
+
+  <!-- Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
+    rel="stylesheet">
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body class="bg-cross">
+
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <div class="container nav-inner">
+      <a href="index.php" class="nav-brand">
+        <!-- Menggunakan path logo asli menyesuaikan index.php -->
+        <img src="../image/logosma5.png" alt="Logo SMAN 5 Samarinda" class="nav-logo"
+          onerror="this.onerror=null; this.src='https://via.placeholder.com/38x38/2563eb/ffffff?text=S5'; this.style.borderRadius='50%';">
+        <span>SMAN 5 Samarinda</span>
+      </a>
+      <div class="nav-menu">
+        <a href="index.php">Beranda</a>
+        <a href="alumni.html" class="active">Data Alumni</a>
+      </div>
+      <button class="menu-btn" id="menuBtn" aria-label="Buka menu" aria-expanded="false">
+        <i class="fa-solid fa-bars" id="menuIcon"></i>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile Menu Panel -->
+  <div class="mobile-menu" id="mobileMenu" role="navigation" aria-label="Menu mobile">
+    <a href="index.php">Beranda</a>
+    <a href="alumni.html" class="active">Data Alumni</a>
+  </div>
+
+  <!-- PAGE HERO -->
+  <section class="page-hero-alt">
+    <div class="container">
+
+      <h1 class="hero-title" style="margin-bottom: 20px;">Data Alumni <span
+          style="background: linear-gradient(135deg, #1e293b, #475569); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">SMAN
+          5
+          Samarinda</span></h1>
+      <p class="hero-desc" style="max-width: 600px; margin-left: auto; margin-right: auto; margin-bottom: 0;">
+        Rekap lengkap lulusan berdasarkan kampus, jurusan, dan jalur masuk Perguruan Tinggi Negeri.
+      </p>
+    </div>
+  </section>
+
+  <!-- CONTENT -->
+  <div class="page-content" style="padding-bottom: 80px;">
+    <div class="container">
+
+      <!-- Stats Strip -->
+      <div class="stats-strip">
+        <div class="stat-card-alumni">
+          <div class="stat-card-label"><i class="fa-solid fa-users"></i>Total Alumni</div>
+          <div class="stat-card-val" id="statTotal">—</div>
+          <div class="stat-card-sub">data terdaftar</div>
+        </div>
+        <div class="stat-card-alumni">
+          <div class="stat-card-label"><i class="fa-solid fa-building-columns"></i>Universitas</div>
+          <div class="stat-card-val" id="statUniv">—</div>
+          <div class="stat-card-sub">kampus berbeda</div>
+        </div>
+        <div class="stat-card-alumni">
+          <div class="stat-card-label"><i class="fa-solid fa-book-open"></i>Program Studi</div>
+          <div class="stat-card-val" id="statProdi">—</div>
+          <div class="stat-card-sub">jurusan berbeda</div>
+        </div>
+        <div class="stat-card-alumni">
+          <div class="stat-card-label"><i class="fa-solid fa-calendar"></i>Angkatan Baru</div>
+          <div class="stat-card-val" id="statAngkatan">—</div>
+          <div class="stat-card-sub">tahun terbaru</div>
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="search-field">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="tableSearch" placeholder="Cari nama, kampus, jurusan..." autocomplete="off">
+        </div>
+        <!-- Jalur Dropdown -->
+        <div class="custom-sort" id="filterJalur">
+          <div class="custom-sort-trigger" id="jalurTrigger">Jalur: Semua</div>
+          <div class="custom-sort-options" id="jalurOptions">
+            <div class="custom-sort-option active" data-jalur="semua">Semua Jalur</div>
+            <div class="custom-sort-option" data-jalur="SNBP">SNBP</div>
+            <div class="custom-sort-option" data-jalur="SNBT">SNBT</div>
+            <div class="custom-sort-option" data-jalur="Mandiri">Mandiri</div>
+          </div>
+        </div>
+
+        <!-- Tahun Dropdown -->
+        <div class="custom-sort" id="filterTahun">
+          <div class="custom-sort-trigger" id="tahunTrigger">Tahun: Semua</div>
+          <div class="custom-sort-options" id="tahunOptions">
+            <div class="custom-sort-option active" data-tahun="semua">Semua Tahun</div>
+            <div class="custom-sort-option" data-tahun="2023">2023</div>
+            <div class="custom-sort-option" data-tahun="2022">2022</div>
+            <div class="custom-sort-option" data-tahun="2021">2021</div>
+          </div>
+        </div>
+
+        <div class="toolbar-right">
+          <!-- Custom Sort Dropdown -->
+          <div class="custom-sort" id="customSort">
+            <div class="custom-sort-trigger" id="sortTrigger">Nama A–Z</div>
+            <div class="custom-sort-options" id="sortOptions">
+              <div class="custom-sort-option active" data-value="nama">Nama A–Z</div>
+              <div class="custom-sort-option" data-value="kampus">Kampus A–Z</div>
+              <div class="custom-sort-option" data-value="angkatan">Angkatan Terbaru</div>
+            </div>
+            <!-- Hidden native select for logic -->
+            <select id="sortSelect" style="display:none;">
+              <option value="nama" selected>Urutkan: Nama A–Z</option>
+              <option value="kampus">Urutkan: Kampus A–Z</option>
+              <option value="angkatan">Urutkan: Angkatan Terbaru</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrap">
+        <div style="overflow-x:auto;">
+          <table class="alumni-table">
+            <thead>
+              <tr>
+                <th style="width:40px;">#</th>
+                <th>Nama Alumni</th>
+                <th>Kampus</th>
+                <th>Program Studi</th>
+                <th>Jalur</th>
+                <th>Angkatan</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <!-- Diisi oleh JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="paginationWrap">
+          <span class="pagination-info" id="paginationInfo"></span>
+          <div class="pagination-btns" id="paginationBtns"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="brand-col">
+        <h3 class="footer-title">SMAN 5 SAMARINDA</h3>
+        <p class="footer-desc">Destinasi pendidikan menengah atas unggulan di Kalimantan Timur. Kami menyajikan ruang
+          belajar asri, terpadu, serta komunitas siswa yang bebas berekspresi dan berprestasi.</p>
+        <div class="footer-contact-item">
+          <i class="fa-solid fa-location-dot" style="margin-top:0;"></i>
+          <span>Jl. Ir. H. Juanda No. 1, Air Hitam, Kec. Samarinda Ulu, Kota Samarinda, Kalimantan Timur 75124</span>
+        </div>
+      </div>
+
+      <div class="link-col">
+        <h3 class="footer-title">Jelajahi</h3>
+        <ul class="footer-links">
+          <li><a href="index.php"><i class="fa-solid fa-chevron-right"></i> Beranda</a></li>
+          <li><a href="alumni.html"><i class="fa-solid fa-chevron-right"></i> Data Alumni</a></li>
+          <li><a href="#"><i class="fa-solid fa-chevron-right"></i> Galeri Prestasi</a></li>
+          <li><a href="#"><i class="fa-solid fa-chevron-right"></i> Tentang Kami</a></li>
+        </ul>
+      </div>
+
+      <div class="contact-col">
+        <h3 class="footer-title">Hubungi Kami</h3>
+        <div class="footer-contact-list">
+          <div class="footer-contact-item">
+            <i class="fa-solid fa-envelope"></i>
+            <span>info@sman5samarinda.sch.id</span>
+          </div>
+          <div class="footer-contact-item">
+            <i class="fa-solid fa-phone"></i>
+            <span>(0541) 1234567</span>
+          </div>
+          <div class="footer-contact-item">
+            <i class="fa-regular fa-clock"></i>
+            <span>08:00 - 15:00 WITA</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="container">
+        <p>&copy; 2026 SMAN 5 Samarinda. All Rights Reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <button class="scroll-top" id="scrollTop" aria-label="Scroll ke atas">
+    <i class="fa-solid fa-chevron-up"></i>
+  </button>
+
+  <script>
+    // ════════════════════════════════════════════
+    //  DATA ALUMNI (Contoh Statis)
+    //  → Saat integrasi PHP, ganti array ini dengan
+    //    data dari query: SELECT * FROM alumni
+    // ════════════════════════════════════════════
+    var ALUMNI_DATA = [
+      { nama: 'Andi Firmansyah', kampus: 'Universitas Gadjah Mada', prodi: 'Teknik Informatika', jalur: 'SNBT', angkatan: 2023 },
+      { nama: 'Siti Rahayu', kampus: 'Universitas Mulawarman', prodi: 'Kedokteran', jalur: 'SNBT', angkatan: 2023 },
+      { nama: 'Dimas Prasetyo', kampus: 'Institut Teknologi Bandung', prodi: 'Teknik Sipil', jalur: 'SNBT', angkatan: 2022 },
+      { nama: 'Nurul Hidayah', kampus: 'Universitas Indonesia', prodi: 'Psikologi', jalur: 'Mandiri', angkatan: 2022 },
+      { nama: 'Rizky Maulana', kampus: 'Universitas Diponegoro', prodi: 'Ilmu Hukum', jalur: 'SNBP', angkatan: 2023 },
+      { nama: 'Ayu Putri Lestari', kampus: 'Universitas Brawijaya', prodi: 'Agribisnis', jalur: 'SNBP', angkatan: 2023 },
+      { nama: 'Faisal Hakim', kampus: 'Institut Teknologi Kalimantan', prodi: 'Teknik Mesin', jalur: 'SNBP', angkatan: 2022 },
+      { nama: 'Dewi Anggraini', kampus: 'Universitas Mulawarman', prodi: 'FKIP Matematika', jalur: 'SNBP', angkatan: 2021 },
+      { nama: 'Bagas Santana', kampus: 'Universitas Hasanuddin', prodi: 'Teknik Elektro', jalur: 'SNBT', angkatan: 2022 },
+      { nama: 'Nisa Maharani', kampus: 'Universitas Indonesia', prodi: 'Ilmu Komunikasi', jalur: 'Mandiri', angkatan: 2021 },
+      { nama: 'Hendra Saputra', kampus: 'Universitas Gadjah Mada', prodi: 'Akuntansi', jalur: 'SNBT', angkatan: 2021 },
+      { nama: 'Zahra Nabila', kampus: 'Universitas Lambung Mangkurat', prodi: 'Hukum', jalur: 'SNBP', angkatan: 2023 },
+      { nama: 'Irfan Ramadhan', kampus: 'Institut Teknologi Bandung', prodi: 'Teknik Kimia', jalur: 'SNBT', angkatan: 2023 },
+      { nama: 'Laila Fitriani', kampus: 'Universitas Tanjungpura', prodi: 'Ekonomi Pembangunan', jalur: 'SNBP', angkatan: 2022 },
+      { nama: 'Wahyu Hidayat', kampus: 'Universitas Brawijaya', prodi: 'Ilmu Administrasi', jalur: 'Mandiri', angkatan: 2021 },
+      { nama: 'Cindy Permata', kampus: 'Universitas Mulawarman', prodi: 'Farmasi', jalur: 'SNBT', angkatan: 2023 },
+      { nama: 'Eko Prasetyo', kampus: 'Universitas Palangka Raya', prodi: 'FKIP Biologi', jalur: 'SNBP', angkatan: 2021 },
+      { nama: 'Mega Aulia', kampus: 'Institut Teknologi Kalimantan', prodi: 'Teknik Elektro', jalur: 'SNBT', angkatan: 2023 },
+      { nama: 'Rudi Hartono', kampus: 'Universitas Diponegoro', prodi: 'Teknik Mesin', jalur: 'SNBT', angkatan: 2022 },
+      { nama: 'Putri Ramadhani', kampus: 'Universitas Gadjah Mada', prodi: 'Kedokteran Gigi', jalur: 'Mandiri', angkatan: 2023 },
+    ];
+
+
+
+    // ── State ──
+    var state = {
+      q: '',
+      jalur: 'semua',
+      tahun: 'semua',
+      sort: 'nama',
+      page: 1,
+      perPage: 8,
+    };
+
+    // ── Filter & Sort ──
+    function getFiltered() {
+      var q = state.q.toLowerCase();
+      return ALUMNI_DATA
+        .filter(function (a) {
+          var matchQ = !q ||
+            a.nama.toLowerCase().includes(q) ||
+            a.kampus.toLowerCase().includes(q) ||
+            a.prodi.toLowerCase().includes(q);
+          var matchJalur = state.jalur === 'semua' || a.jalur === state.jalur;
+          var matchTahun = state.tahun === 'semua' || a.angkatan == state.tahun;
+          return matchQ && matchJalur && matchTahun;
+        })
+        .sort(function (a, b) {
+          if (state.sort === 'nama') return a.nama.localeCompare(b.nama);
+          if (state.sort === 'kampus') return a.kampus.localeCompare(b.kampus);
+          if (state.sort === 'angkatan') return b.angkatan - a.angkatan;
+          return 0;
+        });
+    }
+
+    // ── Render Table ──
+    function render() {
+      var filtered = getFiltered();
+      var total = filtered.length;
+      var totalPage = Math.max(1, Math.ceil(total / state.perPage));
+      if (state.page > totalPage) state.page = totalPage;
+
+      var start = (state.page - 1) * state.perPage;
+      var slice = filtered.slice(start, start + state.perPage);
+
+      var tbody = document.getElementById('tableBody');
+
+      if (slice.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-magnifying-glass"></i><p>Tidak ada data yang cocok dengan pencarian Anda.</p></div></td></tr>';
+      } else {
+        tbody.innerHTML = slice.map(function (a, i) {
+          var jalurClass = 'badge-' + a.jalur.toLowerCase();
+          return '<tr>' +
+            '<td style="color:var(--text-light);font-size:12px;font-weight:600;">' + (start + i + 1) + '</td>' +
+            '<td><div class="alumni-name">' + a.nama + '</div></td>' +
+            '<td style="font-weight:600;">' + a.kampus + '</td>' +
+            '<td style="color:var(--text-muted);">' + a.prodi + '</td>' +
+            '<td><span class="jalur-badge ' + jalurClass + '">' + a.jalur + '</span></td>' +
+            '<td><span class="angkatan-badge">' + a.angkatan + '</span></td>' +
+            '</tr>';
+        }).join('');
+      }
+
+      // Pagination info
+      var from = total === 0 ? 0 : start + 1;
+      var to = Math.min(start + state.perPage, total);
+      document.getElementById('paginationInfo').textContent =
+        'Menampilkan ' + from + '–' + to + ' dari ' + total + ' alumni';
+
+      // Pagination buttons
+      var btns = '';
+      btns += '<button class="page-btn" id="prevBtn" ' + (state.page === 1 ? 'disabled' : '') + '>' +
+        '<i class="fa-solid fa-chevron-left" style="font-size:11px;"></i></button>';
+
+      for (var p = 1; p <= totalPage; p++) {
+        if (totalPage <= 7 || p === 1 || p === totalPage || Math.abs(p - state.page) <= 1) {
+          btns += '<button class="page-btn' + (p === state.page ? ' active' : '') + '" data-page="' + p + '">' + p + '</button>';
+        } else if (Math.abs(p - state.page) === 2) {
+          btns += '<button class="page-btn" disabled style="border:none;">…</button>';
+        }
+      }
+
+      btns += '<button class="page-btn" id="nextBtn" ' + (state.page === totalPage ? 'disabled' : '') + '>' +
+        '<i class="fa-solid fa-chevron-right" style="font-size:11px;"></i></button>';
+
+      document.getElementById('paginationBtns').innerHTML = btns;
+
+      // Attach page button events
+      document.querySelectorAll('[data-page]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          state.page = parseInt(this.dataset.page);
+          render();
+        });
+      });
+      var prev = document.getElementById('prevBtn');
+      var next = document.getElementById('nextBtn');
+      if (prev) prev.addEventListener('click', function () { state.page--; render(); });
+      if (next) next.addEventListener('click', function () { state.page++; render(); });
+    }
+
+    // ── Update Stats Cards ──
+    function updateStats() {
+      var univs = [...new Set(ALUMNI_DATA.map(function (a) { return a.kampus; }))];
+      var prodis = [...new Set(ALUMNI_DATA.map(function (a) { return a.prodi; }))];
+      var years = ALUMNI_DATA.map(function (a) { return a.angkatan; });
+
+      document.getElementById('statTotal').textContent = ALUMNI_DATA.length;
+      document.getElementById('statUniv').textContent = univs.length;
+      document.getElementById('statProdi').textContent = prodis.length;
+      document.getElementById('statAngkatan').textContent = Math.max.apply(null, years);
+    }
+
+    // ── Event Listeners ──
+    document.getElementById('tableSearch').addEventListener('input', function () {
+      state.q = this.value;
+      state.page = 1;
+      render();
+    });
+
+    // ── Custom Dropdown Logic (Jalur, Tahun, Sort) ──
+    function setupCustomDropdown(triggerId, optionsSelector, dropdownId, stateKey) {
+      const trigger = document.getElementById(triggerId);
+      const dropdown = document.getElementById(dropdownId);
+      const options = document.querySelectorAll(optionsSelector);
+
+      if (!trigger || !dropdown) return;
+
+      // Toggle dropdown
+      trigger.addEventListener('click', function (e) {
+        e.stopPropagation();
+        // Tutup dropdown lain yang sedang terbuka
+        document.querySelectorAll('.custom-sort').forEach(d => {
+          if (d !== dropdown) d.classList.remove('open');
+        });
+        dropdown.classList.toggle('open');
+      });
+
+      // Handle option click
+      options.forEach(option => {
+        option.addEventListener('click', function () {
+          // Update UI
+          options.forEach(opt => opt.classList.remove('active'));
+          this.classList.add('active');
+          trigger.textContent = this.textContent;
+          dropdown.classList.remove('open');
+
+          // Update state & re-render
+          const val = this.dataset[stateKey] || this.dataset.value;
+
+          if (stateKey === 'value') {
+            document.getElementById('sortSelect').value = val;
+            state.sort = val;
+          } else {
+            state[stateKey] = val;
+          }
+
+          state.page = 1;
+          render();
+        });
+      });
+    }
+
+    // Initialize all custom dropdowns
+    setupCustomDropdown('jalurTrigger', '#jalurOptions .custom-sort-option', 'filterJalur', 'jalur');
+    setupCustomDropdown('tahunTrigger', '#tahunOptions .custom-sort-option', 'filterTahun', 'tahun');
+    setupCustomDropdown('sortTrigger', '#sortOptions .custom-sort-option', 'customSort', 'value');
+
+    // Close when clicking outside
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.custom-sort')) {
+        document.querySelectorAll('.custom-sort').forEach(d => d.classList.remove('open'));
+      }
+    });
+
+    // ── Navbar scroll ──
+    (function () {
+      var navbar = document.getElementById('navbar');
+      var lastY = 0;
+      window.addEventListener('scroll', function () {
+        var y = window.scrollY;
+        if (y > lastY && y > 80) navbar.classList.add('hidden');
+        else navbar.classList.remove('hidden');
+        navbar.classList.toggle('scrolled', y > 10);
+        lastY = y <= 0 ? 0 : y;
+      }, { passive: true });
+    })();
+
+    // ── Hamburger ──
+    (function () {
+      var btn = document.getElementById('menuBtn');
+      var menu = document.getElementById('mobileMenu');
+      var icon = document.getElementById('menuIcon');
+      var open = false;
+      btn.addEventListener('click', function () {
+        open = !open;
+        menu.classList.toggle('open', open);
+        icon.className = open ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
+      });
+    })();
+
+    // ── Scroll Top ──
+    (function () {
+      var btn = document.getElementById('scrollTop');
+      window.addEventListener('scroll', function () {
+        btn.classList.toggle('visible', window.scrollY > 400);
+      }, { passive: true });
+      btn.addEventListener('click', function () {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    })();
+
+    // ── URL param search (dari hero search) ──
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var q = params.get('q');
+      if (q) {
+        document.getElementById('tableSearch').value = q;
+        state.q = q;
+      }
+    })();
+
+    // ── Init ──
+    updateStats();
+    render();
+  </script>
+
+</body>
+
+</html>
