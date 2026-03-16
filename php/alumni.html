@@ -98,29 +98,36 @@
           <input type="text" id="tableSearch" placeholder="Cari nama, kampus, jurusan..." autocomplete="off">
         </div>
         <!-- Jalur Dropdown -->
-        <div class="custom-sort" id="filterJalur">
-          <div class="custom-sort-trigger" id="jalurTrigger">Jalur: Semua</div>
-          <div class="custom-sort-options" id="jalurOptions">
-            <div class="custom-sort-option active" data-jalur="semua">Semua Jalur</div>
-            <div class="custom-sort-option" data-jalur="SNBP">SNBP</div>
-            <div class="custom-sort-option" data-jalur="SNBT">SNBT</div>
-            <div class="custom-sort-option" data-jalur="Mandiri">Mandiri</div>
+        <div class="filter-group">
+          <span class="filter-label">Jalur:</span>
+          <div class="custom-sort" id="filterJalur">
+            <div class="custom-sort-trigger" id="jalurTrigger">Semua Jalur</div>
+            <div class="custom-sort-options" id="jalurOptions">
+              <div class="custom-sort-option active" data-jalur="semua">Semua Jalur</div>
+              <div class="custom-sort-option" data-jalur="SNBP">SNBP</div>
+              <div class="custom-sort-option" data-jalur="SNBT">SNBT</div>
+              <div class="custom-sort-option" data-jalur="Mandiri">Mandiri</div>
+            </div>
           </div>
         </div>
 
         <!-- Tahun Dropdown -->
-        <div class="custom-sort" id="filterTahun">
-          <div class="custom-sort-trigger" id="tahunTrigger">Tahun: Semua</div>
-          <div class="custom-sort-options" id="tahunOptions">
-            <div class="custom-sort-option active" data-tahun="semua">Semua Tahun</div>
-            <div class="custom-sort-option" data-tahun="2023">2023</div>
-            <div class="custom-sort-option" data-tahun="2022">2022</div>
-            <div class="custom-sort-option" data-tahun="2021">2021</div>
+        <div class="filter-group">
+          <span class="filter-label">Tahun Lulus:</span>
+          <div class="custom-sort" id="filterTahun">
+            <div class="custom-sort-trigger" id="tahunTrigger">Semua Tahun</div>
+            <div class="custom-sort-options" id="tahunOptions">
+              <div class="custom-sort-option active" data-tahun="semua">Semua Tahun</div>
+              <div class="custom-sort-option" data-tahun="2023">2023</div>
+              <div class="custom-sort-option" data-tahun="2022">2022</div>
+              <div class="custom-sort-option" data-tahun="2021">2021</div>
+            </div>
           </div>
         </div>
 
-        <div class="toolbar-right">
-          <!-- Custom Sort Dropdown -->
+        <!-- Custom Sort Dropdown -->
+        <div class="filter-group">
+          <span class="filter-label">Urutkan:</span>
           <div class="custom-sort" id="customSort">
             <div class="custom-sort-trigger" id="sortTrigger">Nama A–Z</div>
             <div class="custom-sort-options" id="sortOptions">
@@ -130,9 +137,9 @@
             </div>
             <!-- Hidden native select for logic -->
             <select id="sortSelect" style="display:none;">
-              <option value="nama" selected>Urutkan: Nama A–Z</option>
-              <option value="kampus">Urutkan: Kampus A–Z</option>
-              <option value="angkatan">Urutkan: Angkatan Terbaru</option>
+              <option value="nama" selected>Nama A–Z</option>
+              <option value="kampus">Kampus A–Z</option>
+              <option value="angkatan">Angkatan Terbaru</option>
             </select>
           </div>
         </div>
