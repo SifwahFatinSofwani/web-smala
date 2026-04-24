@@ -221,7 +221,7 @@ $rejected = $counts['rejected'] ?? 0;
         <div class="laporan-card-item">
           <div class="laporan-av" style="background:#d6eaf0;color:#1a2636;"><?= $init ?></div>
           <div class="laporan-info">
-            <h4><?= htmlspecialchars($r['nama']) ?> <span style="wwwdfont-size:11px;background:var(--bg);padding:2px 8px;border-radius:999px;font-weight:600;color:var(--muted);">NISN: <?= htmlspecialchars($r['nisn']) ?></span></h4>
+            <h4><?= htmlspecialchars($r['nama']) ?> <span style="font-size:11px;background:var(--bg);padding:2px 8px;border-radius:999px;font-weight:600;color:var(--muted);">NISN: <?= htmlspecialchars($r['nisn']) ?></span></h4>
             <div class="meta">
               <span><i class="fa-solid fa-building-columns"></i><?= htmlspecialchars($r['universitas_nama']) ?></span>
               <span><i class="fa-solid fa-book-open"></i><?= htmlspecialchars($r['prodi']) ?></span>

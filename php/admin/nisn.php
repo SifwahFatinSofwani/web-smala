@@ -223,7 +223,6 @@ $belumLapor  = $totalNISN - $sudahLapor;
               placeholder="0000000000" required
               value="<?= $editRow ? htmlspecialchars($editRow['nisn']) : '' ?>">
           </div>
-          b
           <div class="f-group" style="flex:1;min-width:180px;">
             <label>Nama Siswa *</label>
             <input type="text" name="nama_siswa" placeholder="Nama lengkap siswa" required
