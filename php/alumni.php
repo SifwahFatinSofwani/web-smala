@@ -1,3 +1,15 @@
+<?php
+//  php/alumni.php
+require_once __DIR__ . '/admin/db.php';
+try {
+    $db = getDB();
+    $stmt = $db->query("SELECT nama, universitas_nama as kampus, prodi, jalur, angkatan FROM alumni WHERE status = 'aktif' ORDER BY nama ASC");
+    $alumni_db = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $alumni_json = json_encode($alumni_db);
+} catch (Exception $e) {
+    $alumni_json = '[]';
+}
+?>
 <!DOCTYPE html>
 <html lang="id">
 
@@ -35,7 +47,7 @@
       </a>
       <div class="nav-menu">
         <a href="index.php">Beranda</a>
-        <a href="alumni.html" class="active">Data Alumni</a>
+        <a href="alumni.php" class="active">Data Alumni</a>
       </div>
       <button class="menu-btn" id="menuBtn" aria-label="Buka menu" aria-expanded="false">
         <i class="fa-solid fa-bars" id="menuIcon"></i>
@@ -46,7 +58,7 @@
   <!-- Mobile Menu Panel -->
   <div class="mobile-menu" id="mobileMenu" role="navigation" aria-label="Menu mobile">
     <a href="index.php">Beranda</a>
-    <a href="alumni.html" class="active">Data Alumni</a>
+    <a href="alumni.php" class="active">Data Alumni</a>
   </div>
 
   <!-- PAGE HERO -->
@@ -192,7 +204,7 @@
         <h3 class="footer-title">Jelajahi</h3>
         <ul class="footer-links">
           <li><a href="index.php"><i class="fa-solid fa-chevron-right"></i> Beranda</a></li>
-          <li><a href="alumni.html"><i class="fa-solid fa-chevron-right"></i> Data Alumni</a></li>
+          <li><a href="alumni.php"><i class="fa-solid fa-chevron-right"></i> Data Alumni</a></li>
           <li><a href="#"><i class="fa-solid fa-chevron-right"></i> Galeri Prestasi</a></li>
           <li><a href="#"><i class="fa-solid fa-chevron-right"></i> Tentang Kami</a></li>
         </ul>
@@ -230,32 +242,9 @@
 
   <script>
     // ════════════════════════════════════════════
-    //  DATA ALUMNI (Contoh Statis)
-    //  → Saat integrasi PHP, ganti array ini dengan
-    //    data dari query: SELECT * FROM alumni
+    //  DATA ALUMNI (Dinamis dari Database)
     // ════════════════════════════════════════════
-    var ALUMNI_DATA = [
-      { nama: 'Andi Firmansyah', kampus: 'Universitas Gadjah Mada', prodi: 'Teknik Informatika', jalur: 'SNBT', angkatan: 2023 },
-      { nama: 'Siti Rahayu', kampus: 'Universitas Mulawarman', prodi: 'Kedokteran', jalur: 'SNBT', angkatan: 2023 },
-      { nama: 'Dimas Prasetyo', kampus: 'Institut Teknologi Bandung', prodi: 'Teknik Sipil', jalur: 'SNBT', angkatan: 2022 },
-      { nama: 'Nurul Hidayah', kampus: 'Universitas Indonesia', prodi: 'Psikologi', jalur: 'Mandiri', angkatan: 2022 },
-      { nama: 'Rizky Maulana', kampus: 'Universitas Diponegoro', prodi: 'Ilmu Hukum', jalur: 'SNBP', angkatan: 2023 },
-      { nama: 'Ayu Putri Lestari', kampus: 'Universitas Brawijaya', prodi: 'Agribisnis', jalur: 'SNBP', angkatan: 2023 },
-      { nama: 'Faisal Hakim', kampus: 'Institut Teknologi Kalimantan', prodi: 'Teknik Mesin', jalur: 'SNBP', angkatan: 2022 },
-      { nama: 'Dewi Anggraini', kampus: 'Universitas Mulawarman', prodi: 'FKIP Matematika', jalur: 'SNBP', angkatan: 2021 },
-      { nama: 'Bagas Santana', kampus: 'Universitas Hasanuddin', prodi: 'Teknik Elektro', jalur: 'SNBT', angkatan: 2022 },
-      { nama: 'Nisa Maharani', kampus: 'Universitas Indonesia', prodi: 'Ilmu Komunikasi', jalur: 'Mandiri', angkatan: 2021 },
-      { nama: 'Hendra Saputra', kampus: 'Universitas Gadjah Mada', prodi: 'Akuntansi', jalur: 'SNBT', angkatan: 2021 },
-      { nama: 'Zahra Nabila', kampus: 'Universitas Lambung Mangkurat', prodi: 'Hukum', jalur: 'SNBP', angkatan: 2023 },
-      { nama: 'Irfan Ramadhan', kampus: 'Institut Teknologi Bandung', prodi: 'Teknik Kimia', jalur: 'SNBT', angkatan: 2023 },
-      { nama: 'Laila Fitriani', kampus: 'Universitas Tanjungpura', prodi: 'Ekonomi Pembangunan', jalur: 'SNBP', angkatan: 2022 },
-      { nama: 'Wahyu Hidayat', kampus: 'Universitas Brawijaya', prodi: 'Ilmu Administrasi', jalur: 'Mandiri', angkatan: 2021 },
-      { nama: 'Cindy Permata', kampus: 'Universitas Mulawarman', prodi: 'Farmasi', jalur: 'SNBT', angkatan: 2023 },
-      { nama: 'Eko Prasetyo', kampus: 'Universitas Palangka Raya', prodi: 'FKIP Biologi', jalur: 'SNBP', angkatan: 2021 },
-      { nama: 'Mega Aulia', kampus: 'Institut Teknologi Kalimantan', prodi: 'Teknik Elektro', jalur: 'SNBT', angkatan: 2023 },
-      { nama: 'Rudi Hartono', kampus: 'Universitas Diponegoro', prodi: 'Teknik Mesin', jalur: 'SNBT', angkatan: 2022 },
-      { nama: 'Putri Ramadhani', kampus: 'Universitas Gadjah Mada', prodi: 'Kedokteran Gigi', jalur: 'Mandiri', angkatan: 2023 },
-    ];
+    var ALUMNI_DATA = <?php echo $alumni_json; ?>;
 
 
 
