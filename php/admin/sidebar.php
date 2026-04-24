@@ -24,12 +24,6 @@ function navActive(string $page, string $current): string {
       <span class="brand-label">Admin Panel</span>
     </div>
     <div style="display:flex;align-items:center;gap:6px;">
-      <button class="sidebar-toggle" id="sidebarToggle" title="Perkecil" aria-label="Perkecil">
-        <i class="fa-solid fa-angles-left"></i>
-      </button>
-      <button class="sidebar-expand" id="sidebarExpand" title="Perbesar" aria-label="Perbesar">
-        <i class="fa-solid fa-angles-right"></i>
-      </button>
       <button class="sidebar-close" id="sidebarClose" aria-label="Tutup">
         <i class="fa-solid fa-xmark"></i>
       </button>
@@ -71,7 +65,7 @@ function navActive(string $page, string $current): string {
     ?>
     <a href="laporan.php" class="nav-item<?= navActive('laporan',$currentPage) ?>" data-tooltip="Laporan Masuk">
       <span class="nav-icon">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
           <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
         </svg>
       </span>
@@ -84,7 +78,7 @@ function navActive(string $page, string $current): string {
     <!-- Universitas -->
     <a href="universitas.php" class="nav-item<?= navActive('universitas',$currentPage) ?>" data-tooltip="Universitas">
       <span class="nav-icon">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 21h18M9 21V7l-6 3 6-9 6 9-6-3v14M15 21V11h6v10"/>
         </svg>
       </span>
@@ -94,7 +88,7 @@ function navActive(string $page, string $current): string {
     <!-- NISN Manager -->
     <a href="nisn.php" class="nav-item<?= navActive('nisn',$currentPage) ?>" data-tooltip="Kelola NISN">
       <span class="nav-icon">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
           <rect x="2" y="5" width="20" height="14" rx="2"/>
           <path d="M2 10h20"/>
         </svg>
@@ -125,8 +119,19 @@ function navActive(string $page, string $current): string {
       <span class="nav-text">Pengaturan</span>
     </a>
 
+  </nav>
+
+  <style>
+    /* Toggle visibility inline */
+    .sidebar.collapsed #sidebarToggle { display: none !important; }
+    .sidebar:not(.collapsed) #sidebarExpand { display: none !important; }
+    /* Overide button default styles */
+    #sidebarToggle, #sidebarExpand { font-family: inherit; width: 100%; cursor: pointer; text-align: left; }
+  </style>
+
+  <div class="sidebar-footer" style="padding: 14px 10px; border-top: 1px solid rgba(168,205,217,.5); display: flex; flex-direction: column;">
     <!-- Keluar -->
-    <a href="auth.php?action=logout" class="nav-item nav-logout" data-tooltip="Keluar">
+    <a href="auth.php?action=logout" class="nav-item nav-logout" data-tooltip="Keluar" style="color:#ef4444;">
       <span class="nav-icon">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
@@ -134,6 +139,13 @@ function navActive(string $page, string $current): string {
       </span>
       <span class="nav-text">Keluar</span>
     </a>
-
-  </nav>
+    
+    <button class="nav-item" id="sidebarToggle" title="Perkecil Sidebar" aria-label="Perkecil">
+      <span class="nav-icon"><i class="fa-solid fa-angles-left"></i></span>
+      <span class="nav-text">Perkecil Sidebar</span>
+    </button>
+    <button class="nav-item" id="sidebarExpand" title="Perbesar Sidebar" aria-label="Perbesar" style="justify-content: center; padding: 10px;">
+      <span class="nav-icon" style="margin: 0;"><i class="fa-solid fa-angles-right"></i></span>
+    </button>
+  </div>
 </aside>

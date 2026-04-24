@@ -291,7 +291,7 @@ img {
 /* 5. HERO */
 .hero-section {
     padding: 48px 0 80px;
-    text-align: center;
+    text-align: left;
 }
 
 @media (min-width: 1024px) {
@@ -313,7 +313,7 @@ img {
     color: var(--text-muted);
     font-weight: 500;
     max-width: 440px;
-    margin: 0 auto 36px;
+    margin: 0 0 36px;
 }
 
 /* Search & Action Boxes */
@@ -321,7 +321,7 @@ img {
 .btn-action {
     width: 100%;
     max-width: 440px;
-    margin: 0 auto 14px;
+    margin: 0 0 14px;
     background: rgba(170, 215, 217, .25);
     border: 1px solid rgba(170, 215, 217, .5);
     padding: 14px 20px;
@@ -1342,7 +1342,7 @@ img {
     border-radius: var(--radius-sm);
     padding: 12px 16px;
     flex: 1;
-    max-width: 400px;
+    max-width: 300px;
     transition: all .2s;
 }
 
@@ -1411,6 +1411,8 @@ img {
     background-repeat: no-repeat;
     background-position: right 12px center;
     background-size: 14px;
+    min-width: 170px;
+    text-align: left;
 }
 
 .custom-sort.open .custom-sort-trigger {
@@ -1423,7 +1425,6 @@ img {
     position: absolute;
     top: 100%;
     left: 0;
-    right: 0;
     background: white;
     border: 1px solid var(--border);
     border-top: none;
@@ -1525,22 +1526,10 @@ img {
     letter-spacing: .5px;
 }
 
-.badge-snbp {
+.badge-snbp, .badge-snbt, .badge-mandiri {
     background: transparent;
-    color: #15803d;
-    border-color: rgba(21, 128, 61, 0.3);
-}
-
-.badge-snbt {
-    background: transparent;
-    color: #1d4ed8;
-    border-color: rgba(29, 78, 216, 0.3);
-}
-
-.badge-mandiri {
-    background: transparent;
-    color: #b45309;
-    border-color: rgba(180, 83, 9, 0.3);
+    color: #475569;
+    border-color: rgba(71, 85, 105, 0.3);
 }
 
 .angkatan-badge {

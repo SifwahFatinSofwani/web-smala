@@ -3,7 +3,7 @@
 //  Admin: Kelola Data Alumni (CRUD)
 //  php/admin/alumni.php
 // ============================================================
-require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/db.php';
 requireAdmin();
 
 $db      = getDB();
@@ -106,6 +106,10 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
     .alert-msg { display:flex; align-items:center; gap:10px; padding:12px 16px; border-radius:var(--r-sm); font-size:13px; font-weight:600; margin-bottom:18px; }
     .alert-msg.success { background:var(--green-bg); color:var(--green-text); border:1px solid #86efac; }
     .alert-msg.error   { background:var(--red-bg);   color:var(--red-text);   border:1px solid #fca5a5; }
+
+    /* Tabel tidak overflow horizontal */
+    .data-table td { word-break: break-word; color: var(--text) !important; }
+    .data-table td, .data-table th { white-space: normal !important; }
 
     .filter-row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:16px; }
     .search-admin { display:flex; align-items:center; gap:8px; background:var(--bg); border:1px solid var(--border); border-radius:var(--r-sm); padding:9px 14px; flex:1; max-width:320px; }
@@ -277,8 +281,18 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
 
     <!-- Table -->
     <div class="card">
-      <div class="table-wrap">
-        <table class="data-table">
+      <div class="table-wrap" style="overflow-x:unset;">
+        <table class="data-table" style="width:100%;table-layout:fixed;">
+          <colgroup>
+            <col style="width:5%">
+            <col style="width:25%">
+            <col style="width:20%">
+            <col style="width:15%">
+            <col style="width:10%">
+            <col style="width:10%">
+            <col style="width:10%">
+            <col style="width:5%">
+          </colgroup>
           <thead>
             <tr>
               <th>#</th><th>Nama Alumni</th><th>Universitas</th><th>Program Studi</th>
@@ -292,10 +306,7 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
             </td></tr>
             <?php else: ?>
             <?php
-            $colors = ['#e0f2fe','#dcfce7','#ede9fe','#fef9c3','#fee2e2','#e0e7ff'];
-            $texts  = ['#0369a1','#166534','#5b21b6','#92400e','#991b1b','#3730a3'];
             foreach ($alumni as $i => $a):
-              $ci   = $i % count($colors);
               $init = strtoupper(mb_substr($a['nama'], 0, 1));
               $num  = ($page-1)*$perPage + $i + 1;
             ?>
@@ -303,7 +314,7 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
               <td style="color:var(--muted);font-size:12px;"><?= $num ?></td>
               <td>
                 <div class="user-cell">
-                  <div class="user-ava" style="background:<?= $colors[$ci] ?>;color:<?= $texts[$ci] ?>;"><?= $init ?></div>
+                  <div class="user-ava" style="background:#f3f4f6;color:#4b5563;"><?= $init ?></div>
                   <div>
                     <div style="font-weight:700;"><?= htmlspecialchars($a['nama']) ?></div>
                     <?php if ($a['nisn']): ?><div style="font-size:11px;color:var(--muted);">NISN: <?= htmlspecialchars($a['nisn']) ?></div><?php endif; ?>

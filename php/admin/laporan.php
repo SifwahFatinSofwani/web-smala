@@ -3,7 +3,7 @@
 //  Admin: Kelola Laporan Masuk
 //  php/admin/laporan.php
 // ============================================================
-require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/db.php';
 requireAdmin();
 
 $db      = getDB();
@@ -157,22 +157,22 @@ $rejected = $counts['rejected'] ?? 0;
 
     <!-- Stats -->
     <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
-      <div class="stat-card">
-        <div class="stat-icon-wrap"><i class="fa-solid fa-inbox" style="color:#f59e0b;"></i></div>
+      <div class="stat-card stat-card-sm">
+        <div class="stat-icon-wrap"><i class="fa-solid fa-inbox" style="color:#3b6cf4;"></i></div>
         <div class="stat-body">
           <p class="stat-label">Menunggu</p>
           <h3 class="stat-value"><?= $pending ?></h3>
         </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon-wrap"><i class="fa-solid fa-circle-check" style="color:#22c55e;"></i></div>
+      <div class="stat-card stat-card-sm">
+        <div class="stat-icon-wrap"><i class="fa-solid fa-circle-check" style="color:#3b6cf4;"></i></div>
         <div class="stat-body">
           <p class="stat-label">Disetujui</p>
           <h3 class="stat-value"><?= $approved ?></h3>
         </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon-wrap"><i class="fa-solid fa-circle-xmark" style="color:#ef4444;"></i></div>
+      <div class="stat-card stat-card-sm">
+        <div class="stat-icon-wrap"><i class="fa-solid fa-circle-xmark" style="color:#3b6cf4;"></i></div>
         <div class="stat-body">
           <p class="stat-label">Ditolak</p>
           <h3 class="stat-value"><?= $rejected ?></h3>
@@ -215,14 +215,11 @@ $rejected = $counts['rejected'] ?? 0;
         </div>
         <?php else: ?>
         <?php
-        $colors = ['#e0f2fe','#dcfce7','#ede9fe','#fef9c3','#fee2e2','#e0e7ff','#fce7f3'];
-        $texts  = ['#0369a1','#166534','#5b21b6','#92400e','#991b1b','#3730a3','#9d174d'];
         foreach ($rows as $i => $r):
-          $ci   = $i % count($colors);
           $init = strtoupper(mb_substr($r['nama'], 0, 1));
         ?>
         <div class="laporan-card-item">
-          <div class="laporan-av" style="background:<?= $colors[$ci] ?>;color:<?= $texts[$ci] ?>;"><?= $init ?></div>
+          <div class="laporan-av" style="background:#d6eaf0;color:#1a2636;"><?= $init ?></div>
           <div class="laporan-info">
             <h4><?= htmlspecialchars($r['nama']) ?> <span style="font-size:11px;background:var(--bg);padding:2px 8px;border-radius:999px;font-weight:600;color:var(--muted);">NISN: <?= htmlspecialchars($r['nisn']) ?></span></h4>
             <div class="meta">
@@ -266,6 +263,7 @@ $rejected = $counts['rejected'] ?? 0;
 
   </main>
 </div>
+
 
 <script src="../../js/admin.js"></script>
 <script>

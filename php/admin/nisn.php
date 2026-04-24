@@ -3,7 +3,7 @@
 //  Admin: Kelola NISN
 //  php/admin/nisn.php
 // ============================================================
-require_once __DIR__ . '/../config/db.php';
+require_once __DIR__ . '/db.php';
 requireAdmin();
 
 $db  = getDB();
@@ -187,16 +187,16 @@ $belumLapor  = $totalNISN - $sudahLapor;
 
     <!-- Stats -->
     <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
-      <div class="stat-card">
+      <div class="stat-card stat-card-sm">
         <div class="stat-icon-wrap"><i class="fa-solid fa-id-card" style="color:#3b6cf4;"></i></div>
         <div class="stat-body"><p class="stat-label">Total NISN</p><h3 class="stat-value"><?= $totalNISN ?></h3></div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon-wrap"><i class="fa-solid fa-circle-check" style="color:#22c55e;"></i></div>
+      <div class="stat-card stat-card-sm">
+        <div class="stat-icon-wrap"><i class="fa-solid fa-circle-check" style="color:#3b6cf4;"></i></div>
         <div class="stat-body"><p class="stat-label">Sudah Lapor</p><h3 class="stat-value"><?= $sudahLapor ?></h3></div>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon-wrap"><i class="fa-solid fa-clock" style="color:#f59e0b;"></i></div>
+      <div class="stat-card stat-card-sm">
+        <div class="stat-icon-wrap"><i class="fa-solid fa-clock" style="color:#3b6cf4;"></i></div>
         <div class="stat-body"><p class="stat-label">Belum Lapor</p><h3 class="stat-value"><?= $belumLapor ?></h3></div>
       </div>
     </div>

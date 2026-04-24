@@ -28,13 +28,13 @@
   <!-- ===== NAVBAR ===== -->
   <nav class="navbar" id="navbar">
     <div class="container nav-inner">
-      <a href="index.html" class="nav-brand">
+      <a href="index.php" class="nav-brand">
         <img src="../image/logosma5.png" alt="Logo SMAN 5 Samarinda" class="nav-logo">
         <span>SMAN 5 Samarinda</span>
       </a>
       <div class="nav-menu">
         <a href="#" class="active">Beranda</a>
-        <a href="alumni.html">Data Alumni</a>
+        <a href="alumni.php">Data Alumni</a>
         <a href="#jadwal">Jadwal SNPMB</a>
       </div>
       <button class="menu-btn" id="menuBtn" aria-label="Buka menu" aria-expanded="false">
@@ -46,7 +46,7 @@
   <!-- Mobile Menu Panel -->
   <div class="mobile-menu" id="mobileMenu" role="navigation" aria-label="Menu mobile">
     <a href="#" class="active">Beranda</a>
-    <a href="alumni.html">Data Alumni</a>
+    <a href="alumni.php">Data Alumni</a>
     <a href="#jadwal">Jadwal SNPMB</a>
   </div>
 
@@ -74,7 +74,7 @@
         </div>
         <p id="searchMsg" style="font-size:13px;color:#2563eb;margin-bottom:8px;margin-top:-6px;min-height:18px;font-weight:600;"></p>
 
-        <a href="alumni.html" class="btn-action">
+        <a href="alumni.php" class="btn-action">
           <span>Lihat Data Alumni</span>
           <svg class="action-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
@@ -126,20 +126,20 @@
           <div class="viz-stat-sub">data terverifikasi</div>
         </div>
         <div class="viz-stat-card">
-          <div class="viz-stat-accent" style="background:#16a34a;"></div>
-          <div class="viz-stat-label"><i class="fa-solid fa-building-columns" style="color:#16a34a;"></i> Universitas</div>
+          <div class="viz-stat-accent" style="background:#2563eb;"></div>
+          <div class="viz-stat-label"><i class="fa-solid fa-building-columns" style="color:#2563eb;"></i> Universitas</div>
           <div class="viz-stat-val">47</div>
           <div class="viz-stat-sub">kampus berbeda</div>
         </div>
         <div class="viz-stat-card">
-          <div class="viz-stat-accent" style="background:#d97706;"></div>
-          <div class="viz-stat-label"><i class="fa-solid fa-map-location-dot" style="color:#d97706;"></i> Kota Tujuan</div>
+          <div class="viz-stat-accent" style="background:#2563eb;"></div>
+          <div class="viz-stat-label"><i class="fa-solid fa-map-location-dot" style="color:#2563eb;"></i> Kota Tujuan</div>
           <div class="viz-stat-val">18</div>
           <div class="viz-stat-sub">kota di Indonesia</div>
         </div>
         <div class="viz-stat-card">
-          <div class="viz-stat-accent" style="background:#7c3aed;"></div>
-          <div class="viz-stat-label"><i class="fa-solid fa-chart-line" style="color:#7c3aed;"></i> Lolos PTN</div>
+          <div class="viz-stat-accent" style="background:#2563eb;"></div>
+          <div class="viz-stat-label"><i class="fa-solid fa-chart-line" style="color:#2563eb;"></i> Lolos PTN</div>
           <div class="viz-stat-val">68<span style="font-size:20px;font-weight:700;">%</span></div>
           <div class="viz-stat-sub">angkatan 2023</div>
         </div>
@@ -379,92 +379,92 @@
       <div class="trend-grid">
 
         <div class="trend-card">
-          <div class="trend-icon" style="background:#e0f2fe;color:#0284c7;">
+          <div class="trend-icon" style="background:#f1f5f9;color:#475569;">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;">
               <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5"/>
             </svg>
           </div>
           <div class="trend-info">
             <h3>Teknologi Informasi &amp; Komputer</h3>
-            <div class="progress-bar"><div class="progress-fill" style="width:20%;background:#0ea5e9;"></div></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:20%;background:#64748b;"></div></div>
             <span class="trend-stat">20% Peminat</span>
           </div>
         </div>
 
         <div class="trend-card">
-          <div class="trend-icon" style="background:#fed7aa;color:#c2410c;">
+          <div class="trend-icon" style="background:#f1f5f9;color:#475569;">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;">
               <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.832M11.42 15.17l-1.028-1.028M11.42 15.17l-4.242 4.242a2.652 2.652 0 01-3.75-3.75l4.242-4.242-1.028-1.028m8.72 4.708l1.028 1.028m-4.708-8.72l1.028 1.028M15.17 11.42l4.242-4.242a2.652 2.652 0 00-3.75-3.75l-4.242 4.242-1.028-1.028m-8.72 4.708l1.028 1.028"/>
             </svg>
           </div>
           <div class="trend-info">
             <h3>Teknik &amp; Rekayasa</h3>
-            <div class="progress-bar"><div class="progress-fill" style="width:18%;background:#f97316;"></div></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:18%;background:#64748b;"></div></div>
             <span class="trend-stat">18% Peminat</span>
           </div>
         </div>
 
         <div class="trend-card">
-          <div class="trend-icon" style="background:#fef08a;color:#ca8a04;">
+          <div class="trend-icon" style="background:#f1f5f9;color:#475569;">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;">
               <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/>
             </svg>
           </div>
           <div class="trend-info">
             <h3>Bisnis &amp; Administrasi</h3>
-            <div class="progress-bar"><div class="progress-fill" style="width:14%;background:#eab308;"></div></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:14%;background:#64748b;"></div></div>
             <span class="trend-stat">14% Peminat</span>
           </div>
         </div>
 
         <div class="trend-card">
-          <div class="trend-icon" style="background:#dcfce7;color:#16a34a;">
+          <div class="trend-icon" style="background:#f1f5f9;color:#475569;">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;">
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/>
             </svg>
           </div>
           <div class="trend-info">
             <h3>Kedokteran &amp; Kesehatan</h3>
-            <div class="progress-bar"><div class="progress-fill" style="width:15%;background:#22c55e;"></div></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:15%;background:#64748b;"></div></div>
             <span class="trend-stat">15% Peminat</span>
           </div>
         </div>
 
         <div class="trend-card">
-          <div class="trend-icon" style="background:#e0e7ff;color:#4338ca;">
+          <div class="trend-icon" style="background:#f1f5f9;color:#475569;">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785A5.969 5.969 0 006 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337z"/>
             </svg>
           </div>
           <div class="trend-info">
             <h3>Psikologi &amp; Ilmu Sosial</h3>
-            <div class="progress-bar"><div class="progress-fill" style="width:12%;background:#6366f1;"></div></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:12%;background:#64748b;"></div></div>
             <span class="trend-stat">12% Peminat</span>
           </div>
         </div>
 
         <div class="trend-card">
-          <div class="trend-icon" style="background:#fee2e2;color:#dc2626;">
+          <div class="trend-icon" style="background:#f1f5f9;color:#475569;">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z"/>
             </svg>
           </div>
           <div class="trend-info">
             <h3>Hukum &amp; Pemerintahan</h3>
-            <div class="progress-bar"><div class="progress-fill" style="width:8%;background:#ef4444;"></div></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:8%;background:#64748b;"></div></div>
             <span class="trend-stat">8% Peminat</span>
           </div>
         </div>
 
         <div class="trend-card">
-          <div class="trend-icon" style="background:#fdf4ff;color:#c026d3;">
+          <div class="trend-icon" style="background:#f1f5f9;color:#475569;">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:28px;height:28px;">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.854-3.853a3 3 0 00-4.243-4.242l-3.853 3.854a15.995 15.995 0 00-4.648 4.764m3.42 3.42a6 6 0 00-3.42-3.42"/>
             </svg>
           </div>
           <div class="trend-info">
             <h3>Seni &amp; Desain Kreatif</h3>
-            <div class="progress-bar"><div class="progress-fill" style="width:8%;background:#d946ef;"></div></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:8%;background:#64748b;"></div></div>
             <span class="trend-stat">8% Peminat</span>
           </div>
         </div>
@@ -499,27 +499,27 @@
         <div class="timeline-line"></div>
 
         <div class="timeline-item">
-          <div class="timeline-dot" style="border-color:#0ea5e9;"></div>
+          <div class="timeline-dot" style="border-color:#64748b;"></div>
           <div class="timeline-content">
-            <span class="t-date" style="background:#e0f2fe;color:#0284c7;">Januari – Februari</span>
+            <span class="t-date" style="background:#f1f5f9;color:#475569;">Januari – Februari</span>
             <h3>SNBP (Jalur Prestasi)</h3>
             <p>Pembuatan akun SNPMB, penetapan siswa eligible, dan pendaftaran berbasis nilai rapor serta prestasi.</p>
           </div>
         </div>
 
         <div class="timeline-item">
-          <div class="timeline-dot" style="border-color:#eab308;"></div>
+          <div class="timeline-dot" style="border-color:#64748b;"></div>
           <div class="timeline-content">
-            <span class="t-date" style="background:#fef08a;color:#ca8a04;">Maret – Mei</span>
+            <span class="t-date" style="background:#f1f5f9;color:#475569;">Maret – Mei</span>
             <h3>SNBT (Jalur Tes)</h3>
             <p>Pendaftaran UTBK, pelaksanaan ujian berbasis komputer serentak, dan pengumuman tingkat nasional.</p>
           </div>
         </div>
 
         <div class="timeline-item">
-          <div class="timeline-dot" style="border-color:#22c55e;"></div>
+          <div class="timeline-dot" style="border-color:#64748b;"></div>
           <div class="timeline-content">
-            <span class="t-date" style="background:#dcfce7;color:#16a34a;">Juni – Agustus</span>
+            <span class="t-date" style="background:#f1f5f9;color:#475569;">Juni – Agustus</span>
             <h3>Mandiri &amp; Kedinasan</h3>
             <p>Ujian mandiri masing-masing PTN dan tahapan seleksi (fisik, akademik, psikologi) sekolah kedinasan.</p>
           </div>
@@ -622,7 +622,7 @@
           <p>Bantu kami melengkapi data sebaran lulusan. Jika Anda alumni SMAN 5 Samarinda yang baru diterima di Perguruan Tinggi, mari laporkan kampusnya sekarang!</p>
         </div>
         <div>
-          <a href="lapor.html" class="btn-primary">
+          <a href="lapor.php" class="btn-primary">
             Lapor Data <i class="fa-solid fa-arrow-right"></i>
           </a>
         </div>
@@ -646,7 +646,7 @@
         <h3 class="footer-title">Jelajahi</h3>
         <ul class="footer-links">
           <li><a href="index.php"><i class="fa-solid fa-chevron-right"></i> Beranda</a></li>
-          <li><a href="alumni.html"><i class="fa-solid fa-chevron-right"></i> Data Alumni</a></li>
+          <li><a href="alumni.php"><i class="fa-solid fa-chevron-right"></i> Data Alumni</a></li>
           <li><a href="#"><i class="fa-solid fa-chevron-right"></i> Galeri Prestasi</a></li>
           <li><a href="#"><i class="fa-solid fa-chevron-right"></i> Tentang Kami</a></li>
         </ul>
