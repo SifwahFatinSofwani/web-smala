@@ -64,6 +64,7 @@ $univList = $db->query("SELECT id, nama, kota FROM universitas ORDER BY nama")->
 // ── List Alumni ───────────────────────────────────────────────
 $search    = clean($_GET['q']        ?? '');
 $jalurF    = clean($_GET['jalur']    ?? '');
+$jenisF    = clean($_GET['jenis']    ?? '');
 $angkatanF = (int)($_GET['angkatan'] ?? 0);
 $page      = max(1, (int)($_GET['page'] ?? 1));
 $perPage   = 15;
@@ -72,10 +73,11 @@ $where  = ["a.status = 'aktif'"];
 $params = [];
 if ($search)    { $where[] = "(a.nama LIKE ? OR a.universitas_nama LIKE ? OR a.prodi LIKE ?)"; $params = array_merge($params, ["%$search%","%$search%","%$search%"]); }
 if ($jalurF)    { $where[] = "a.jalur = ?"; $params[] = $jalurF; }
+if ($jenisF)    { $where[] = "u.jenis = ?"; $params[] = $jenisF; }
 if ($angkatanF) { $where[] = "a.angkatan = ?"; $params[] = $angkatanF; }
 
 $whereStr = 'WHERE ' . implode(' AND ', $where);
-$total    = $db->prepare("SELECT COUNT(*) FROM alumni a $whereStr"); $total->execute($params); $total = $total->fetchColumn();
+$total    = $db->prepare("SELECT COUNT(*) FROM alumni a JOIN universitas u ON a.universitas_id=u.id $whereStr"); $total->execute($params); $total = $total->fetchColumn();
 $pages    = max(1, ceil($total / $perPage));
 $offset   = ($page - 1) * $perPage;
 
@@ -106,11 +108,18 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
     .data-table td,.data-table th{white-space:normal!important;}
 
     /* ── Filter ── */
-    .filter-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
-    .search-admin{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 14px;flex:1;max-width:320px;}
-    .search-admin:focus-within{border-color:var(--accent);}
-    .search-admin input{border:none;outline:none;background:none;font-family:var(--font);font-size:13px;width:100%;color:var(--text);}
-    .select-filter{padding:9px 32px 9px 12px;border:1px solid var(--border);border-radius:var(--r-sm);font-family:var(--font);font-size:13px;background:var(--surface);color:var(--text);cursor:pointer;appearance:none;background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");background-repeat:no-repeat;background-position:right 10px center;background-size:14px;}
+    .filter-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:20px;background:var(--surface);padding:16px;border-radius:var(--r-md);box-shadow:var(--shadow-sm);border:1px solid var(--border);}
+    .search-admin{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:9px 18px;flex:1;max-width:320px;transition:all .2s ease;box-shadow:inset 0 1px 3px rgba(0,0,0,.02), 0 1px 2px rgba(0,0,0,.02);}
+    .search-admin:focus-within{border-color:var(--accent);box-shadow:0 0 0 4px rgba(59,108,244,.1);}
+    .search-admin input{border:none;outline:none;background:none;font-family:var(--font);font-size:13.5px;width:100%;color:var(--text);font-weight:500;}
+    
+    .select-filter{padding:10px 36px 10px 18px;border:1px solid var(--border);border-radius:999px;font-family:var(--font);font-size:13px;font-weight:600;background-color:var(--bg);color:var(--text);cursor:pointer;appearance:none;background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233b6cf4' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");background-repeat:no-repeat;background-position:right 14px center;background-size:14px;transition:all .2s ease;box-shadow:0 1px 2px rgba(0,0,0,.02);}
+    .select-filter:hover{background-color:var(--surface);border-color:var(--border);transform:translateY(-1px);box-shadow:0 4px 6px -1px rgba(0,0,0,.05);}
+    .select-filter:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(59,108,244,.1);outline:none;}
+    .filter-btn{padding:10px 20px;border-radius:999px;background:var(--accent);color:white;border:none;font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s ease;box-shadow:0 2px 4px rgba(59,108,244,.2);}
+    .filter-btn:hover{background:var(--accent-dark);transform:translateY(-1px);box-shadow:0 4px 8px rgba(59,108,244,.3);}
+    .reset-btn{padding:10px 20px;border-radius:999px;background:var(--surface);color:var(--red-text);border:1px solid #fca5a5;font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s ease;text-decoration:none;}
+    .reset-btn:hover{background:var(--red-bg);transform:translateY(-1px);}
 
     /* ── Pagination ── */
     .pagination-admin{display:flex;align-items:center;gap:8px;padding:14px 18px;border-top:1px solid var(--border);}
@@ -126,14 +135,82 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
     .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
     .form-grid-3{grid-template-columns:1fr 1fr 1fr;}
     @media(max-width:720px){.form-grid,.form-grid-3{grid-template-columns:1fr;}}
-    .f-group{display:flex;flex-direction:column;gap:6px;}
-    .f-group label{font-size:12.5px;font-weight:700;color:var(--text-soft);}
-    .f-group input,.f-group select{padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--font);font-size:13.5px;color:var(--text);background:var(--bg);outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;}
-    .f-group input:focus,.f-group select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,108,244,.1);background:#fff;}
-    .form-actions{display:flex;gap:10px;margin-top:8px;}
-    .btn-save{padding:10px 22px;background:var(--accent);color:white;border:none;border-radius:var(--r-sm);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;transition:background .15s;}
-    .btn-save:hover{background:var(--accent-dark);}
-    .btn-cancel{padding:10px 18px;background:var(--bg);color:var(--text-soft);border:1px solid var(--border);border-radius:var(--r-sm);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:7px;}
+    .f-group{display:flex;flex-direction:column;gap:8px;}
+    .f-group label{font-size:12.5px;font-weight:800;color:var(--text-soft);}
+    .f-group input, .f-group select {
+        padding:10px 14px;
+        border:2px solid transparent;
+        border-radius:8px;
+        font-family:var(--font);
+        font-size:13.5px;
+        color:var(--text);
+        background:var(--bg);
+        outline:none;
+        transition:all .2s ease;
+        box-shadow:inset 0 1px 2px rgba(0,0,0,.03), 0 0 0 1px var(--border);
+    }
+    .f-group select {
+        appearance:none;
+        background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233b6cf4' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat:no-repeat;
+        background-position:right 14px center;
+        background-size:16px;
+        padding-right:38px;
+        cursor:pointer;
+        font-weight:600;
+    }
+    .f-group input:hover, .f-group select:hover {
+        box-shadow:inset 0 1px 2px rgba(0,0,0,.03), 0 0 0 1px #cbd5e1;
+    }
+    .f-group input:focus, .f-group select:focus {
+        border-color:transparent;
+        background:#fff;
+        box-shadow:0 0 0 4px rgba(59,108,244,.15), 0 0 0 1px var(--accent);
+    }
+    .form-actions{display:flex;gap:12px;margin-top:12px;}
+    
+    .btn-save {
+        padding:10px 24px;
+        background:var(--accent);
+        color:white;
+        border:none;
+        border-radius:999px;
+        font-family:var(--font);
+        font-size:13.5px;
+        font-weight:700;
+        cursor:pointer;
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        transition:all .2s ease;
+        box-shadow: 0 4px 6px -1px rgba(59,108,244,.25);
+    }
+    .btn-save:hover {
+        background:var(--accent-dark);
+        transform:translateY(-2px);
+        box-shadow: 0 6px 12px -2px rgba(59,108,244,.35);
+    }
+    .btn-cancel {
+        padding:10px 20px;
+        background:var(--surface);
+        color:var(--text-soft);
+        border:1px solid var(--border);
+        border-radius:999px;
+        font-family:var(--font);
+        font-size:13.5px;
+        font-weight:700;
+        cursor:pointer;
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        transition:all .2s ease;
+        text-decoration:none;
+        box-shadow:0 1px 2px rgba(0,0,0,.05);
+    }
+    .btn-cancel:hover {
+        background:var(--bg);
+        transform:translateY(-1px);
+    }
 
     /* ══════════════════════════════════════════
        BULK IMPORT PANEL
@@ -636,17 +713,22 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
           <option value="<?= $j ?>" <?= $jalurF===$j ? 'selected' : '' ?>><?= $j ?></option>
           <?php endforeach; ?>
         </select>
+        <select name="jenis" class="select-filter" onchange="this.form.submit()">
+          <option value="">Semua Kampus</option>
+          <option value="PTN" <?= $jenisF==='PTN' ? 'selected' : '' ?>>PTN</option>
+          <option value="PTS" <?= $jenisF==='PTS' ? 'selected' : '' ?>>PTS</option>
+        </select>
         <select name="angkatan" class="select-filter" onchange="this.form.submit()">
           <option value="">Semua Tahun</option>
           <?php foreach ($angkatanList as $y): ?>
           <option value="<?= $y ?>" <?= $angkatanF==$y ? 'selected' : '' ?>><?= $y ?></option>
           <?php endforeach; ?>
         </select>
-        <button type="submit" class="btn-primary-sm" style="padding:9px 14px;">
+        <button type="submit" class="filter-btn">
           <i class="fa-solid fa-filter"></i> Filter
         </button>
-        <?php if ($search || $jalurF || $angkatanF): ?>
-        <a href="alumni.php" class="btn-cancel" style="padding:9px 14px;border-radius:var(--r-sm);display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--muted);text-decoration:none;background:var(--bg);border:1px solid var(--border);">
+        <?php if ($search || $jalurF || $angkatanF || $jenisF): ?>
+        <a href="alumni.php" class="reset-btn">
           <i class="fa-solid fa-xmark"></i> Reset
         </a>
         <?php endif; ?>
@@ -725,7 +807,7 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
       <!-- Pagination -->
       <?php if ($pages > 1): ?>
       <div class="pagination-admin">
-        <?php $qs = http_build_query(['q'=>$search,'jalur'=>$jalurF,'angkatan'=>$angkatanF]); ?>
+        <?php $qs = http_build_query(['q'=>$search,'jalur'=>$jalurF,'jenis'=>$jenisF,'angkatan'=>$angkatanF]); ?>
         <a href="?<?= $qs ?>&page=<?= max(1,$page-1) ?>" class="pg-btn" <?= $page<=1?'disabled':'' ?>>
           <i class="fa-solid fa-chevron-left" style="font-size:10px;"></i>
         </a>

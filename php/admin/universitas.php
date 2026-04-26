@@ -145,17 +145,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $oldFile = $old->fetchColumn();
                         if ($oldFile && file_exists($uploadDir . $oldFile)) unlink($uploadDir . $oldFile);
 
-                        $db->prepare('UPDATE universitas SET nama=?, kota=?, logo=?, lat=?, lng=?, pulau=? WHERE id=?')
-                           ->execute([$nama, $kota, $logoPath, $lat, $lng, $pulau, $id]);
+                        $db->prepare('UPDATE universitas SET nama=?, kota=?, logo=?, lat=?, lng=?, pulau=?, jenis=? WHERE id=?')
+                           ->execute([$nama, $kota, $logoPath, $lat, $lng, $pulau, $_POST['jenis'] ?? 'PTN', $id]);
                     } else {
-                        $db->prepare('UPDATE universitas SET nama=?, kota=?, lat=?, lng=?, pulau=? WHERE id=?')
-                           ->execute([$nama, $kota, $lat, $lng, $pulau, $id]);
+                        $db->prepare('UPDATE universitas SET nama=?, kota=?, lat=?, lng=?, pulau=?, jenis=? WHERE id=?')
+                           ->execute([$nama, $kota, $lat, $lng, $pulau, $_POST['jenis'] ?? 'PTN', $id]);
                     }
                     $msg = ($msg ?: 'Data universitas berhasil diperbarui.') . ($geoMsg ?? '');
                     $msgType = $msgType ?: 'success';
                 } else {
-                    $db->prepare('INSERT INTO universitas (nama, kota, logo, lat, lng, pulau) VALUES (?,?,?,?,?,?)')
-                       ->execute([$nama, $kota, $logoPath, $lat, $lng, $pulau]);
+                    $db->prepare('INSERT INTO universitas (nama, kota, logo, lat, lng, pulau, jenis) VALUES (?,?,?,?,?,?,?)')
+                       ->execute([$nama, $kota, $logoPath, $lat, $lng, $pulau, $_POST['jenis'] ?? 'PTN']);
                     $msg = ($msg ?: 'Universitas baru berhasil ditambahkan.') . ($geoMsg ?? '');
                     $msgType = $msgType ?: 'success';
                 }
@@ -267,19 +267,68 @@ $noCoordCount = $db->query("SELECT COUNT(*) FROM universitas WHERE lat IS NULL")
 
     .form-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--shadow-md);padding:24px;margin-bottom:20px;}
     .form-panel h3{font-size:15px;font-weight:800;margin-bottom:18px;display:flex;align-items:center;gap:8px;}
-    .form-row-inline{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
-    .f-group{display:flex;flex-direction:column;gap:6px;}
-    .f-group label{font-size:12.5px;font-weight:700;color:var(--text-soft);}
-    .f-group input{padding:9px 13px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--font);font-size:13px;color:var(--text);background:var(--bg);outline:none;transition:border-color .2s;}
-    .f-group input[type="file"]{padding:6px 13px;font-size:12px;}
-    .f-group input:focus{border-color:var(--accent);background:#fff;}
-    .btn-save{padding:9px 20px;background:var(--accent);color:white;border:none;border-radius:var(--r-sm);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:background .15s;align-self:flex-end;}
-    .btn-save:hover{background:var(--accent-dark);}
+    .form-row-inline{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;}
+    .f-group{display:flex;flex-direction:column;gap:8px;}
+    .f-group label{font-size:12.5px;font-weight:800;color:var(--text-soft);}
+    .f-group input, .f-group select {
+        padding:10px 14px;
+        border:2px solid transparent;
+        border-radius:8px;
+        font-family:var(--font);
+        font-size:13.5px;
+        color:var(--text);
+        background:var(--bg);
+        outline:none;
+        transition:all .2s ease;
+        box-shadow:inset 0 1px 2px rgba(0,0,0,.03), 0 0 0 1px var(--border);
+    }
+    .f-group select {
+        appearance:none;
+        background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233b6cf4' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat:no-repeat;
+        background-position:right 14px center;
+        background-size:16px;
+        padding-right:38px;
+        cursor:pointer;
+        font-weight:600;
+    }
+    .f-group input:hover, .f-group select:hover {
+        box-shadow:inset 0 1px 2px rgba(0,0,0,.03), 0 0 0 1px #cbd5e1;
+    }
+    .f-group input:focus, .f-group select:focus {
+        border-color:transparent;
+        background:#fff;
+        box-shadow:0 0 0 4px rgba(59,108,244,.15), 0 0 0 1px var(--accent);
+    }
+    .f-group input[type="file"]{padding:7px 14px;font-size:12.5px;background:#fff;}
+    
+    .btn-save {
+        padding:10px 24px;
+        background:var(--accent);
+        color:white;
+        border:none;
+        border-radius:999px;
+        font-family:var(--font);
+        font-size:13.5px;
+        font-weight:700;
+        cursor:pointer;
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        transition:all .2s ease;
+        align-self:flex-end;
+        box-shadow: 0 4px 6px -1px rgba(59,108,244,.25);
+    }
+    .btn-save:hover {
+        background:var(--accent-dark);
+        transform:translateY(-2px);
+        box-shadow: 0 6px 12px -2px rgba(59,108,244,.35);
+    }
 
-    .filter-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
-    .search-admin{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 14px;flex:1;max-width:280px;}
-    .search-admin:focus-within{border-color:var(--accent);}
-    .search-admin input{border:none;outline:none;background:none;font-family:var(--font);font-size:13px;width:100%;color:var(--text);}
+    .filter-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:20px;background:var(--surface);padding:16px;border-radius:var(--r-md);box-shadow:var(--shadow-sm);border:1px solid var(--border);}
+    .search-admin{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:9px 18px;flex:1;max-width:320px;transition:all .2s ease;box-shadow:inset 0 1px 3px rgba(0,0,0,.02), 0 1px 2px rgba(0,0,0,.02);}
+    .search-admin:focus-within{border-color:var(--accent);box-shadow:0 0 0 4px rgba(59,108,244,.1);}
+    .search-admin input{border:none;outline:none;background:none;font-family:var(--font);font-size:13.5px;width:100%;color:var(--text);font-weight:500;}
 
     .pg-wrap{display:flex;align-items:center;gap:8px;padding:14px 18px;border-top:1px solid var(--border);}
     .pg-btn{width:34px;height:34px;border:1px solid var(--border);border-radius:var(--r-xs);font-size:13px;font-weight:700;color:var(--text-soft);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;text-decoration:none;}
@@ -390,6 +439,15 @@ $noCoordCount = $db->query("SELECT COUNT(*) FROM universitas WHERE lat IS NULL")
             <input type="text" name="kota" placeholder="Contoh: Samarinda"
               value="<?= $editRow ? htmlspecialchars($editRow['kota']) : '' ?>">
           </div>
+          <div class="f-group" style="flex:1;min-width:100px;">
+            <label>Jenis Kampus</label>
+            <select name="jenis">
+              <option value="PTN" <?= ($editRow && ($editRow['jenis']??'') === 'PTN') ? 'selected' : '' ?>>PTN</option>
+              <option value="PTS" <?= ($editRow && ($editRow['jenis']??'') === 'PTS') ? 'selected' : '' ?>>PTS</option>
+              <option value="Kedinasan" <?= ($editRow && ($editRow['jenis']??'') === 'Kedinasan') ? 'selected' : '' ?>>Kedinasan</option>
+              <option value="Lainnya" <?= ($editRow && ($editRow['jenis']??'') === 'Lainnya') ? 'selected' : '' ?>>Lainnya</option>
+            </select>
+          </div>
           <div class="f-group" style="flex:0 0 160px;">
             <label>Logo Kampus</label>
             <input type="file" name="logo" accept="image/png, image/jpeg, image/webp">
@@ -398,7 +456,7 @@ $noCoordCount = $db->query("SELECT COUNT(*) FROM universitas WHERE lat IS NULL")
             <i class="fa-solid fa-floppy-disk"></i> <?= $editRow ? 'Update' : 'Tambah' ?>
           </button>
           <?php if ($editRow): ?>
-          <a href="universitas.php" style="align-self:flex-end;margin-bottom:2px;padding:9px 14px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px;font-weight:600;color:var(--text-soft);text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+          <a href="universitas.php" style="align-self:flex-end;margin-bottom:2px;padding:10px 20px;background:var(--surface);border:1px solid var(--border);border-radius:999px;font-size:13.5px;font-weight:700;color:var(--text-soft);text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all .2s ease;box-shadow:0 1px 2px rgba(0,0,0,.05);" onmouseover="this.style.background='var(--bg)';this.style.transform='translateY(-1px)';" onmouseout="this.style.background='var(--surface)';this.style.transform='none';">
             <i class="fa-solid fa-xmark"></i> Batal
           </a>
           <?php endif; ?>
@@ -432,6 +490,7 @@ $noCoordCount = $db->query("SELECT COUNT(*) FROM universitas WHERE lat IS NULL")
               <th>#</th>
               <th>Logo</th>
               <th>Nama Universitas</th>
+              <th>Jenis</th>
               <th>Kota</th>
               <th>Pulau</th>
               <th>Koordinat Peta</th>
@@ -455,6 +514,7 @@ $noCoordCount = $db->query("SELECT COUNT(*) FROM universitas WHERE lat IS NULL")
                 <?php endif; ?>
               </td>
               <td style="font-weight:700;"><?= htmlspecialchars($u['nama']) ?></td>
+              <td><span style="font-size:12px;font-weight:600;padding:2px 6px;background:var(--bg);border:1px solid var(--border);border-radius:4px;"><?= htmlspecialchars($u['jenis'] ?? 'PTN') ?></span></td>
               <td style="color:var(--text-soft);"><?= htmlspecialchars($u['kota'] ?? '—') ?></td>
               <td>
                 <?php if (!empty($u['pulau'])): ?>

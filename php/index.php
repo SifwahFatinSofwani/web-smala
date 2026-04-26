@@ -15,6 +15,7 @@ try {
             u.kode,
             u.nama,
             u.kota,
+            u.jenis,
             COALESCE(u.pulau, 'Lainnya') AS pulau,
             u.lat,
             u.lng,
@@ -114,6 +115,102 @@ try {
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="../css/style.css">
+  <style>
+    /* Custom Modern Dropdown for Map Filter */
+    .custom-dropdown {
+      position: relative;
+      min-width: 200px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      user-select: none;
+    }
+    .dropdown-selected {
+      padding: 10px 20px;
+      background-color: #ffffff;
+      border: 2px solid transparent;
+      border-radius: 999px;
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #1e293b;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .dropdown-selected:hover {
+      border-color: #e2e8f0;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+      transform: translateY(-2px);
+    }
+    .custom-dropdown.open .dropdown-selected {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+      transform: translateY(-2px);
+    }
+    .dropdown-selected i {
+      color: #3b82f6;
+      font-size: 14px;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .custom-dropdown.open .dropdown-selected i {
+      transform: rotate(180deg);
+    }
+    .dropdown-options {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 100;
+      border: 1px solid #e2e8f0;
+    }
+    .custom-dropdown.open .dropdown-options {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .dropdown-option {
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .dropdown-option:not(:last-child) {
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .dropdown-option:hover {
+      background-color: #f8fafc;
+      color: #3b82f6;
+      padding-left: 24px;
+    }
+    .dropdown-option.active {
+      color: #3b82f6;
+      background-color: #eff6ff;
+      font-weight: 700;
+    }
+    .dropdown-option .check-icon {
+      opacity: 0;
+      transform: scale(0.8);
+      transition: all 0.2s ease;
+    }
+    .dropdown-option.active .check-icon {
+      opacity: 1;
+      transform: scale(1);
+    }
+  </style>
 </head>
 <body class="bg-cross">
 
@@ -226,12 +323,28 @@ try {
 
       <!-- ── 2. PETA BUBBLE MAP D3 (data dari DB) ── -->
       <div style="margin-bottom:48px;">
-        <div class="section-header" style="margin-bottom:28px;">
-          <div class="section-eyebrow">Peta Interaktif</div>
-          <h2 class="section-title" style="font-size:26px;">Jejak Alumni se-Nusantara</h2>
-          <p class="section-subtitle">
-            Ukuran lingkaran proporsional dengan jumlah alumni. Arahkan kursor ke tiap lingkaran untuk detail lengkap.
-          </p>
+        <div class="section-header" style="margin-bottom:28px; display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
+          <div>
+            <div class="section-eyebrow">Peta Interaktif</div>
+            <h2 class="section-title" style="font-size:26px; margin-bottom:8px;">Jejak Alumni se-Nusantara</h2>
+            <p class="section-subtitle" style="margin:0;">
+              Ukuran lingkaran proporsional dengan jumlah alumni. Arahkan kursor ke tiap lingkaran untuk detail lengkap.
+            </p>
+          </div>
+          <div>
+            <div class="custom-dropdown" id="mapFilterDropdown">
+              <div class="dropdown-selected" id="mapFilterSelected">
+                <span>Semua Kampus</span>
+                <i class="fa-solid fa-chevron-down"></i>
+              </div>
+              <div class="dropdown-options" id="mapFilterOptions">
+                <div class="dropdown-option active" data-value="">Semua Kampus <i class="fa-solid fa-check check-icon"></i></div>
+                <div class="dropdown-option" data-value="PTN">PTN (Negeri) <i class="fa-solid fa-check check-icon"></i></div>
+                <div class="dropdown-option" data-value="PTS">PTS (Swasta) <i class="fa-solid fa-check check-icon"></i></div>
+                <div class="dropdown-option" data-value="Kedinasan">Kedinasan <i class="fa-solid fa-check check-icon"></i></div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="viz-map-wrapper">
@@ -631,6 +744,7 @@ try {
           'kode'    => $u['kode']    ?? '',
           'nama'    => $u['nama']    ?? '',
           'kota'    => $u['kota']    ?? '',
+          'jenis'   => $u['jenis']   ?? 'PTN',
           'pulau'   => $u['pulau']   ?? 'Lainnya',
           'lat'     => (float)($u['lat'] ?? 0),
           'lng'     => (float)($u['lng'] ?? 0),
@@ -683,6 +797,12 @@ try {
   (function() {
     const wrap    = document.getElementById('d3-indonesia-map');
     const tooltip = document.getElementById('bubbleTooltip');
+    const filterDropdown = document.getElementById('mapFilterDropdown');
+    const filterSelected = document.getElementById('mapFilterSelected');
+    const filterOptions  = document.getElementById('mapFilterOptions');
+    let countriesData;
+    let currentFilter = '';
+    
     const W = wrap.clientWidth || 860;
     const H = Math.round(W * 0.44);
 
@@ -693,53 +813,93 @@ try {
 
     const pathGen = d3.geoPath().projection(proj);
 
-    const svg = d3.select('#d3-indonesia-map')
-      .html('')
-      .append('svg')
-      .attr('viewBox', `0 0 ${W} ${H}`)
-      .attr('width', '100%')
-      .style('display', 'block');
-
-    svg.append('rect').attr('width', W).attr('height', H)
-       .attr('fill', '#dbeafe').attr('rx', 12);
-
     d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(world => {
-      const countries = topojson.feature(world, world.objects.countries);
+      countriesData = topojson.feature(world, world.objects.countries);
+      renderMap('');
+      
+      // Custom Dropdown Logic
+      if (filterDropdown && filterSelected && filterOptions) {
+        filterSelected.addEventListener('click', (e) => {
+          e.stopPropagation();
+          filterDropdown.classList.toggle('open');
+        });
+
+        const opts = filterOptions.querySelectorAll('.dropdown-option');
+        opts.forEach(opt => {
+          opt.addEventListener('click', () => {
+            opts.forEach(o => o.classList.remove('active'));
+            opt.classList.add('active');
+            const val = opt.getAttribute('data-value');
+            const text = opt.childNodes[0].textContent.trim();
+            filterSelected.querySelector('span').textContent = text;
+            filterDropdown.classList.remove('open');
+            
+            if (currentFilter !== val) {
+              currentFilter = val;
+              renderMap(val);
+            }
+          });
+        });
+
+        document.addEventListener('click', (e) => {
+          if (!filterDropdown.contains(e.target)) {
+            filterDropdown.classList.remove('open');
+          }
+        });
+      }
+    }).catch(() => {
+      document.getElementById('d3-indonesia-map').innerHTML =
+        '<div class="map-loading-state"><i class="fa-solid fa-triangle-exclamation"></i> Gagal memuat peta. Periksa koneksi.</div>';
+    });
+
+    function renderMap(jenisFilter) {
+      d3.select('#d3-indonesia-map').html('');
+      const svg = d3.select('#d3-indonesia-map')
+        .append('svg')
+        .attr('viewBox', `0 0 ${W} ${H}`)
+        .attr('width', '100%')
+        .style('display', 'block');
+
+      svg.append('rect').attr('width', W).attr('height', H)
+         .attr('fill', '#dbeafe').attr('rx', 12);
 
       svg.append('g').selectAll('path')
-        .data(countries.features)
+        .data(countriesData.features)
         .join('path')
         .attr('d', pathGen)
         .attr('fill', d => d.id === '360' ? '#bfdbfe' : '#e0eaf7')
         .attr('stroke', '#b8cfe0').attr('stroke-width', 0.4);
 
       svg.append('g').selectAll('path')
-        .data(countries.features.filter(d => d.id === '360'))
+        .data(countriesData.features.filter(d => d.id === '360'))
         .join('path')
         .attr('d', pathGen)
         .attr('fill', '#dbeafe').attr('stroke', '#93c5fd').attr('stroke-width', 1);
 
-      if (UNIV_DATA.length === 0) {
-        // Tampilkan pesan jika belum ada data
+      let filteredData = UNIV_DATA;
+      if (jenisFilter) {
+        filteredData = filteredData.filter(u => u.jenis === jenisFilter);
+      }
+
+      if (filteredData.length === 0) {
         svg.append('text')
            .attr('x', W/2).attr('y', H/2)
            .attr('text-anchor','middle')
            .attr('font-size', 14).attr('font-weight','600')
            .attr('font-family',"'Plus Jakarta Sans',sans-serif")
            .attr('fill','#64748b')
-           .text('Belum ada data kampus dengan koordinat. Tambahkan di panel Admin → Universitas.');
+           .text(UNIV_DATA.length === 0 ? 'Belum ada data kampus dengan koordinat.' : 'Tidak ada kampus yang sesuai filter.');
         return;
       }
 
       const rScale = d3.scaleSqrt()
-        .domain([0, d3.max(UNIV_DATA, d => d.jumlah)])
+        .domain([0, d3.max(filteredData, d => d.jumlah)])
         .range([0, 36]);
 
       const origin = proj([SAMARINDA.lng, SAMARINDA.lat]);
 
-      // Garis putus dari Samarinda ke tiap kampus
-      UNIV_DATA.forEach(u => {
-        // Skip jika ini adalah Samarinda sendiri
+      // Garis putus
+      filteredData.forEach(u => {
         if (Math.abs(u.lat - SAMARINDA.lat) < 0.1 && Math.abs(u.lng - SAMARINDA.lng) < 0.1) return;
         const pt = proj([u.lng, u.lat]);
         svg.append('line')
@@ -749,11 +909,10 @@ try {
           .attr('stroke-dasharray', '4,3').attr('opacity', 0.55);
       });
 
-      // Bubble per universitas
-      UNIV_DATA.forEach(u => {
+      // Bubble
+      filteredData.forEach(u => {
         const pt  = proj([u.lng, u.lat]);
         const r   = rScale(u.jumlah);
-        // Merah untuk Samarinda (UNMUL/ITK), biru/ungu/cyan lainnya
         const isSamarinda = Math.abs(u.lat - SAMARINDA.lat) < 0.5 && Math.abs(u.lng - SAMARINDA.lng) < 0.5;
         const col = isSamarinda ? '#ef4444' : (COLOR_PULAU[u.pulau] || '#0891b2');
 
@@ -770,7 +929,7 @@ try {
           .on('mousemove', function(event) {
             const box = wrap.getBoundingClientRect();
             tooltip.innerHTML =
-              '<strong>' + u.nama + '</strong><br>' +
+              '<strong>' + u.nama + '</strong> (' + u.jenis + ')<br>' +
               '<span class="tt-jumlah">' + u.jumlah + ' alumni</span><br>' +
               '<span class="tt-detail">SNBP ' + u.snbp + ' · SNBT ' + u.snbt + ' · Mandiri ' + u.mandiri + '</span>';
             tooltip.style.opacity = '1';
@@ -789,7 +948,7 @@ try {
           .text(u.jumlah);
       });
 
-      // Titik asal Samarinda
+      // Titik Samarinda
       svg.append('circle').attr('cx', origin[0]).attr('cy', origin[1])
         .attr('r', 8).attr('fill', '#ef4444').attr('stroke', 'white').attr('stroke-width', 2.5);
       svg.append('circle').attr('cx', origin[0]).attr('cy', origin[1])
@@ -800,11 +959,7 @@ try {
         .attr('font-family', "'Plus Jakarta Sans', sans-serif")
         .attr('fill', '#1e293b')
         .text('SMAN 5 Samarinda');
-
-    }).catch(() => {
-      document.getElementById('d3-indonesia-map').innerHTML =
-        '<div class="map-loading-state"><i class="fa-solid fa-triangle-exclamation"></i> Gagal memuat peta. Periksa koneksi.</div>';
-    });
+    }
   })();
 
 
