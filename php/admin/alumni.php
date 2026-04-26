@@ -25,10 +25,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id       = (int)($_POST['id']      ?? 0);
     $nama     = clean($_POST['nama']    ?? '');
     $univId   = (int)($_POST['universitas_id'] ?? 0);
+    $univBaru = clean($_POST['universitas_nama_baru'] ?? '');
     $prodi    = clean($_POST['prodi']   ?? '');
     $jalur    = $_POST['jalur']         ?? '';
     $angkatan = (int)($_POST['angkatan'] ?? 0);
     $nisn     = clean($_POST['nisn']    ?? '');
+
+    // Jika admin memilih "Lainnya" (id = -1), buat universitas baru dulu
+    if ($univId === -1 && $univBaru) {
+        // Cek apakah sudah ada dengan nama sama
+        $cek = $db->prepare('SELECT id FROM universitas WHERE LOWER(TRIM(nama)) = LOWER(TRIM(?))');
+        $cek->execute([$univBaru]);
+        $existing = $cek->fetchColumn();
+        if ($existing) {
+            $univId = (int)$existing;
+        } else {
+            $kode = 'CUSTOM_' . strtoupper(substr(preg_replace('/[^A-Z]/i','', $univBaru), 0, 6)) . '_' . rand(10,99);
+            $db->prepare('INSERT INTO universitas (kode, nama, kota) VALUES (?, ?, ?)')->execute([$kode, $univBaru, '']);
+            $univId = (int)$db->lastInsertId();
+        }
+    }
 
     $jalurOk = in_array($jalur, ['SNBP','SNBT','Mandiri','Kedinasan']);
     if (!$nama || !$univId || !$prodi || !$jalurOk || !$angkatan) {
@@ -59,7 +75,7 @@ if ($aksi === 'edit' && isset($_GET['id'])) {
 }
 
 // Universitas untuk dropdown
-$univList = $db->query("SELECT id, nama, kota FROM universitas ORDER BY nama")->fetchAll();
+$univList = $db->query("SELECT id, nama, kota FROM universitas ORDER BY CASE WHEN LOWER(nama) LIKE '%lainnya%' THEN 1 ELSE 0 END ASC, nama ASC")->fetchAll();
 
 // ── List Alumni ───────────────────────────────────────────────
 $search    = clean($_GET['q']        ?? '');
@@ -134,6 +150,38 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
     .btn-save{padding:10px 22px;background:var(--accent);color:white;border:none;border-radius:var(--r-sm);font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;transition:background .15s;}
     .btn-save:hover{background:var(--accent-dark);}
     .btn-cancel{padding:10px 18px;background:var(--bg);color:var(--text-soft);border:1px solid var(--border);border-radius:var(--r-sm);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:7px;}
+
+    /* ── Searchable Combobox ── */
+    .combobox-wrap{position:relative;}
+    .combobox-input-row{display:flex;align-items:center;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--bg);transition:border-color .2s,box-shadow .2s;overflow:hidden;}
+    .combobox-input-row:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,108,244,.1);background:#fff;}
+    .combobox-input-row.has-val{border-color:#22c55e;background:#f0fdf4;}
+    .combobox-icon{color:var(--muted);font-size:13px;padding:0 0 0 14px;flex-shrink:0;pointer-events:none;}
+    .combobox-input{flex:1;border:none;outline:none;background:transparent;font-family:var(--font);font-size:13.5px;color:var(--text);padding:11px 10px;min-width:0;}
+    .combobox-input::placeholder{color:#b0bec8;}
+    .combobox-clear{width:30px;height:30px;border:none;background:none;cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center;border-radius:6px;transition:all .15s;flex-shrink:0;font-size:12px;}
+    .combobox-clear:hover{background:var(--red-bg);color:var(--red-text);}
+    .combobox-arrow{color:var(--muted);font-size:11px;padding-right:12px;flex-shrink:0;transition:transform .2s;pointer-events:none;}
+    .combobox-wrap.open .combobox-arrow{transform:rotate(180deg);}
+
+    .combobox-list{position:absolute;top:calc(100% + 4px);left:0;right:0;background:white;border:1.5px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--shadow-lg);z-index:999;max-height:280px;overflow-y:auto;padding:4px 0;list-style:none;margin:0;}
+    .combobox-list li{padding:10px 14px;font-size:13.5px;cursor:pointer;transition:background .12s;display:flex;align-items:center;gap:10px;color:var(--text);}
+    .combobox-list li:hover,.combobox-list li.focused{background:var(--accent-light);color:var(--accent);}
+    .combobox-list li.lainnya-item{border-top:1px solid var(--border);margin-top:4px;padding-top:12px;color:var(--accent);font-weight:700;}
+    .combobox-list li.lainnya-item i{color:var(--accent);}
+    .combobox-list li .opt-kota{font-size:11px;color:var(--muted);margin-left:auto;font-weight:500;}
+    .combobox-list li:hover .opt-kota,.combobox-list li.focused .opt-kota{color:var(--accent);}
+    .combobox-no-result{padding:14px;text-align:center;font-size:13px;color:var(--muted);font-weight:600;}
+
+    /* Highlight match */
+    .combobox-list li mark{background:#fef9c3;border-radius:2px;padding:0 2px;font-weight:700;color:var(--text);}
+
+    /* "Lainnya" custom input */
+    .univ-lainnya-wrap{animation:fadeIn .2s ease;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+    .univ-lainnya-input{width:100%;padding:11px 14px;border:1.5px solid var(--accent);border-radius:var(--r-sm);font-family:var(--font);font-size:13.5px;color:var(--text);background:#f0f4ff;outline:none;margin-top:6px;transition:border-color .2s,box-shadow .2s;}
+    .univ-lainnya-input:focus{border-color:var(--accent-dark);box-shadow:0 0 0 3px rgba(59,108,244,.12);background:#fff;}
+    .univ-lainnya-hint{font-size:12px;color:var(--accent);font-weight:600;margin-top:6px;display:flex;align-items:center;gap:5px;line-height:1.5;}
 
     /* ══════════════════════════════════════════
        BULK IMPORT PANEL
@@ -554,41 +602,102 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
 
     <!-- Form Panel: Tambah / Edit -->
     <?php if ($aksi === 'tambah' || $aksi === 'edit'): ?>
+    <?php
+    // Siapkan data universitas untuk JS (id, label, isLainnya)
+    $univJS = [];
+    foreach ($univList as $u) {
+        $label      = $u['nama'] . ($u['kota'] ? ' — ' . $u['kota'] : '');
+        $isLainnya  = (stripos($u['nama'], 'lainnya') !== false);
+        $univJS[]   = ['id' => $u['id'], 'label' => $label, 'nama' => $u['nama'], 'lainnya' => $isLainnya];
+    }
+    $editUnivId   = $editRow ? (int)$editRow['universitas_id'] : 0;
+    $editUnivNama = '';
+    if ($editUnivId) {
+        foreach ($univList as $u) {
+            if ($u['id'] == $editUnivId) {
+                $editUnivNama = $u['nama'] . ($u['kota'] ? ' — '.$u['kota'] : '');
+                break;
+            }
+        }
+    }
+    ?>
     <div class="form-panel">
       <h3>
         <i class="fa-solid fa-<?= $aksi==='edit' ? 'pen' : 'plus' ?>" style="color:var(--accent);"></i>
         <?= $aksi==='edit' ? 'Edit Data Alumni' : 'Tambah Alumni Baru' ?>
       </h3>
-      <form method="POST" action="alumni.php">
+      <form method="POST" action="alumni.php" id="alumniForm" onsubmit="return validateAlumniForm()">
         <?php if ($editRow): ?><input type="hidden" name="id" value="<?= $editRow['id'] ?>"><?php endif; ?>
 
+        <!-- Nama + NISN -->
         <div class="form-grid" style="margin-bottom:16px;">
           <div class="f-group">
             <label>Nama Lengkap *</label>
-            <input type="text" name="nama" placeholder="Nama alumni" required
+            <input type="text" name="nama" id="inputNama" placeholder="Ketik nama alumni..." required autocomplete="off"
               value="<?= $editRow ? htmlspecialchars($editRow['nama']) : '' ?>">
           </div>
           <div class="f-group">
-            <label>NISN (opsional)</label>
+            <label>NISN <span style="font-weight:500;color:var(--muted);">(opsional)</span></label>
             <input type="text" name="nisn" placeholder="10 digit NISN" maxlength="10"
               value="<?= $editRow ? htmlspecialchars($editRow['nisn']??'') : '' ?>">
           </div>
         </div>
 
+        <!-- Universitas — searchable combobox -->
         <div class="form-grid" style="margin-bottom:16px;">
           <div class="f-group" style="grid-column:span 2;">
             <label>Universitas / Perguruan Tinggi *</label>
-            <select name="universitas_id" required>
-              <option value="">— Pilih Universitas —</option>
-              <?php foreach ($univList as $u): ?>
-              <option value="<?= $u['id'] ?>" <?= ($editRow && $editRow['universitas_id']==$u['id']) ? 'selected' : '' ?>>
-                <?= htmlspecialchars($u['nama'] . ($u['kota'] ? ' — '.$u['kota'] : '')) ?>
-              </option>
-              <?php endforeach; ?>
-            </select>
+
+            <!-- Hidden field yang dikirim ke server -->
+            <input type="hidden" name="universitas_id" id="univHiddenId" value="<?= $editUnivId ?: '' ?>">
+            <input type="hidden" name="universitas_nama_baru" id="univHiddenNamaBaru" value="">
+
+            <!-- Combobox wrapper -->
+            <div class="combobox-wrap" id="univComboWrap">
+              <div class="combobox-input-row">
+                <i class="fa-solid fa-building-columns combobox-icon"></i>
+                <input
+                  type="text"
+                  id="univSearch"
+                  class="combobox-input"
+                  placeholder="Ketik nama universitas untuk mencari..."
+                  autocomplete="off"
+                  value="<?= htmlspecialchars($editUnivNama) ?>"
+                >
+                <button type="button" class="combobox-clear" id="univClearBtn" onclick="clearUniv()"
+                  style="display:<?= $editUnivId ? 'flex' : 'none' ?>;">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+                <i class="fa-solid fa-chevron-down combobox-arrow" id="univArrow"></i>
+              </div>
+              <ul class="combobox-list" id="univDropdown" style="display:none;">
+                <!-- Diisi JS -->
+              </ul>
+            </div>
+
+            <!-- Field "Lainnya" — muncul saat pilih universitas lainnya -->
+            <div class="univ-lainnya-wrap" id="univLainnyaWrap" style="display:none;">
+              <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+                <i class="fa-solid fa-pen-to-square" style="color:var(--accent);font-size:13px;flex-shrink:0;"></i>
+                <span style="font-size:12.5px;font-weight:700;color:var(--text-soft);">Nama universitas yang akan disimpan ke database:</span>
+              </div>
+              <input
+                type="text"
+                id="univNamaBaru"
+                class="univ-lainnya-input"
+                placeholder="Contoh: Universitas Nusantara Bandung"
+                autocomplete="off"
+              >
+              <p class="univ-lainnya-hint">
+                <i class="fa-solid fa-circle-info"></i>
+                Universitas ini akan otomatis ditambahkan ke database dan bisa dipilih untuk input berikutnya.
+              </p>
+            </div>
+
           </div>
         </div>
 
+        <!-- Prodi + Jalur + Angkatan -->
         <div class="form-grid form-grid-3" style="margin-bottom:20px;">
           <div class="f-group" style="grid-column:span 1;">
             <label>Program Studi *</label>
@@ -621,6 +730,12 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
         </div>
       </form>
     </div>
+
+    <!-- Data universitas untuk combobox JS -->
+    <script>
+    const UNIV_LIST = <?= json_encode($univJS, JSON_UNESCAPED_UNICODE) ?>;
+    </script>
+
     <?php endif; ?>
 
     <!-- Filter & Search -->
@@ -1064,6 +1179,169 @@ setTimeout(() => {
   const a = document.getElementById('alertMsg');
   if (a) { a.style.opacity='0'; a.style.transition='opacity .4s'; setTimeout(()=>a.remove(),400); }
 }, 4000);
-</script>
+
+// ════════════════════════════════════════════════════════════
+//  SEARCHABLE UNIVERSITY COMBOBOX
+// ════════════════════════════════════════════════════════════
+(function() {
+  if (typeof UNIV_LIST === 'undefined') return;
+
+  const searchInput  = document.getElementById('univSearch');
+  const dropdown     = document.getElementById('univDropdown');
+  const hiddenId     = document.getElementById('univHiddenId');
+  const hiddenNama   = document.getElementById('univHiddenNamaBaru');
+  const clearBtn     = document.getElementById('univClearBtn');
+  const wrap         = document.getElementById('univComboWrap');
+  const inputRow     = wrap.querySelector('.combobox-input-row');
+  const lainnyaWrap  = document.getElementById('univLainnyaWrap');
+  const lainnyaInput = document.getElementById('univNamaBaru');
+
+  let focusedIdx = -1;
+  let isLainnya  = false;
+
+  // ── Render list ───────────────────────────────────────────
+  function renderList(q) {
+    q = (q || '').toLowerCase().trim();
+    focusedIdx = -1;
+
+    const normal  = UNIV_LIST.filter(u => !u.lainnya);
+    const lainnya = UNIV_LIST.filter(u =>  u.lainnya);
+    const filtered = q ? normal.filter(u => u.label.toLowerCase().includes(q)) : normal;
+
+    let html = '';
+    if (filtered.length === 0 && !q) {
+      html = `<li class="combobox-no-result" style="pointer-events:none;">Mulai ketik untuk mencari…</li>`;
+    } else if (filtered.length === 0) {
+      html = `<li class="combobox-no-result" style="pointer-events:none;">Tidak ditemukan. Pilih "Universitas Lainnya" ↓</li>`;
+    } else {
+      html = filtered.map(u => {
+        const parts = u.label.split(' — ');
+        const nama  = parts[0];
+        const kota  = parts[1] || '';
+        const label = q ? hlMatch(nama, q) : escH(nama);
+        return `<li data-id="${u.id}" data-label="${escA(u.label)}" data-lainnya="0">
+          ${label}${kota ? `<span class="opt-kota">${escH(kota)}</span>` : ''}
+        </li>`;
+      }).join('');
+    }
+
+    lainnya.forEach(u => {
+      html += `<li class="lainnya-item" data-id="${u.id}" data-label="${escA(u.label)}" data-lainnya="1">
+        <i class="fa-solid fa-plus"></i> Universitas Lainnya / Tidak Ada di Daftar
+      </li>`;
+    });
+
+    dropdown.innerHTML = html;
+    dropdown.querySelectorAll('li[data-id]').forEach(li => {
+      li.addEventListener('mousedown', e => { e.preventDefault(); pickItem(li); });
+    });
+  }
+
+  // ── Pilih item ────────────────────────────────────────────
+  function pickItem(li) {
+    const id      = li.dataset.id;
+    const label   = li.dataset.label;
+    const lain    = li.dataset.lainnya === '1';
+
+    isLainnya = lain;
+    hiddenId.value = lain ? '-1' : id;
+
+    if (lain) {
+      searchInput.value       = '';
+      searchInput.placeholder = 'Ketik nama universitas untuk mencari…';
+      inputRow.classList.remove('has-val');
+      lainnyaWrap.style.display = 'block';
+      setTimeout(() => lainnyaInput.focus(), 50);
+    } else {
+      searchInput.value       = label;
+      searchInput.placeholder = 'Ketik nama universitas untuk mencari…';
+      inputRow.classList.add('has-val');
+      lainnyaWrap.style.display = 'none';
+      lainnyaInput.value      = '';
+      hiddenNama.value        = '';
+    }
+
+    clearBtn.style.display = 'flex';
+    closeList();
+  }
+
+  lainnyaInput.addEventListener('input', () => { hiddenNama.value = lainnyaInput.value.trim(); });
+
+  function openList() {
+    renderList(isLainnya ? '' : searchInput.value);
+    dropdown.style.display = 'block';
+    wrap.classList.add('open');
+  }
+  function closeList() {
+    dropdown.style.display = 'none';
+    wrap.classList.remove('open');
+    focusedIdx = -1;
+  }
+
+  searchInput.addEventListener('focus', openList);
+  searchInput.addEventListener('input', function() {
+    isLainnya = false;
+    hiddenId.value = '';
+    clearBtn.style.display = this.value ? 'flex' : 'none';
+    inputRow.classList.remove('has-val');
+    lainnyaWrap.style.display = 'none';
+    renderList(this.value);
+    if (dropdown.style.display === 'none') openList();
+  });
+
+  searchInput.addEventListener('keydown', function(e) {
+    const items = [...dropdown.querySelectorAll('li[data-id]')];
+    if (!items.length) return;
+    if (e.key === 'ArrowDown')  { e.preventDefault(); focusedIdx = Math.min(focusedIdx + 1, items.length - 1); moveFocus(items); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); focusedIdx = Math.max(focusedIdx - 1, 0); moveFocus(items); }
+    else if (e.key === 'Enter') { e.preventDefault(); if (focusedIdx >= 0) pickItem(items[focusedIdx]); }
+    else if (e.key === 'Escape') closeList();
+  });
+
+  function moveFocus(items) {
+    items.forEach((li, i) => li.classList.toggle('focused', i === focusedIdx));
+    if (items[focusedIdx]) items[focusedIdx].scrollIntoView({ block:'nearest' });
+  }
+
+  document.addEventListener('click', e => { if (!wrap.contains(e.target)) closeList(); });
+
+  window.clearUniv = function() {
+    searchInput.value = '';
+    searchInput.placeholder = 'Ketik nama universitas untuk mencari…';
+    hiddenId.value  = '';
+    hiddenNama.value = '';
+    lainnyaInput.value = '';
+    clearBtn.style.display = 'none';
+    inputRow.classList.remove('has-val');
+    lainnyaWrap.style.display = 'none';
+    isLainnya = false;
+    searchInput.focus();
+  };
+
+  window.validateAlumniForm = function() {
+    if (!hiddenId.value) {
+      alert('Pilih universitas terlebih dahulu.');
+      searchInput.focus(); openList();
+      return false;
+    }
+    if (hiddenId.value === '-1' && !lainnyaInput.value.trim()) {
+      alert('Isi nama universitas baru terlebih dahulu.');
+      lainnyaInput.focus();
+      return false;
+    }
+    return true;
+  };
+
+  function hlMatch(text, q) {
+    const i = text.toLowerCase().indexOf(q);
+    if (i === -1) return escH(text);
+    return escH(text.slice(0, i)) + '<mark>' + escH(text.slice(i, i + q.length)) + '</mark>' + escH(text.slice(i + q.length));
+  }
+  function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function escA(s) { return String(s).replace(/"/g,'&quot;'); }
+
+  // Init edit mode
+  if (hiddenId.value) { inputRow.classList.add('has-val'); clearBtn.style.display = 'flex'; }
+})();</script>
 </body>
 </html>
