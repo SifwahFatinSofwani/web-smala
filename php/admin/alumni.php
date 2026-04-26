@@ -16,8 +16,9 @@ $aksi = $_GET['action'] ?? 'list';
 // HAPUS
 if ($aksi === 'delete' && isset($_GET['id'])) {
     $id = (int)$_GET['id'];
-    $db->prepare('UPDATE alumni SET status = ? WHERE id = ?')->execute(['nonaktif', $id]);
-    $msg = 'Data alumni berhasil dihapus.'; $msgType = 'success'; $aksi = 'list';
+    // Perbaikan: Hapus data secara permanen dari database
+    $db->prepare('DELETE FROM alumni WHERE id = ?')->execute([$id]);
+    $msg = 'Data alumni berhasil dihapus secara permanen.'; $msgType = 'success'; $aksi = 'list';
 }
 
 // SIMPAN (Tambah / Edit)
@@ -469,7 +470,6 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <div class="main-wrap">
-  <!-- Topbar -->
   <header class="topbar">
     <div class="topbar-left">
       <button class="hamburger" id="hamburger"><i class="fa-solid fa-bars"></i></button>
@@ -483,7 +483,6 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
   </header>
 
   <main class="content">
-    <!-- Page Title -->
     <div class="page-title">
       <div>
         <h2>Data Alumni</h2>
@@ -500,16 +499,12 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
       </div>
     </div>
 
-    <!-- Alert -->
     <?php if ($msg): ?>
     <div class="alert-msg <?= $msgType ?>" id="alertMsg">
       <i class="fa-solid fa-circle-check"></i> <?= $msg ?>
     </div>
     <?php endif; ?>
 
-    <!-- ══════════════════════════════════════════
-         BULK IMPORT PANEL
-    ══════════════════════════════════════════ -->
     <div class="import-panel" id="importPanel">
       <div class="import-panel-header" onclick="toggleImportPanel()">
         <div class="import-panel-title">
@@ -520,7 +515,6 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
       </div>
       <div class="import-panel-body">
 
-        <!-- Steps indicator -->
         <div class="import-steps">
           <div class="import-step active" id="istep1">
             <span class="step-num">1</span> Pilih File
@@ -535,7 +529,6 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
           </div>
         </div>
 
-        <!-- Drop zone -->
         <div class="drop-zone" id="dropZone">
           <input type="file" id="importFile" accept=".csv,.xlsx,.xls">
           <i class="fa-solid fa-cloud-arrow-up"></i>
@@ -543,7 +536,6 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
           <span>Mendukung .csv dan .xlsx — maks. 5 MB</span>
         </div>
 
-        <!-- Template & format hint -->
         <div class="template-row">
           <span>Belum punya template?</span>
           <a class="btn-template" id="btnDownloadCSV" onclick="downloadTemplate('csv')">
@@ -562,7 +554,6 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
           Jika nama universitas tidak ada di database, akan otomatis ditambahkan.
         </div>
 
-        <!-- Preview area -->
         <div class="preview-wrap" id="previewWrap">
           <div class="preview-meta">
             <span id="previewMeta">—</span>
@@ -579,7 +570,6 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
           </div>
         </div>
 
-        <!-- Action bar -->
         <div class="import-action-bar" id="importActionBar">
           <button class="btn-import-now" id="btnImportNow" onclick="doImport()">
             <i class="fa-solid fa-cloud-arrow-up" id="importIcon"></i>
@@ -591,17 +581,12 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
           <span class="import-progress-text" id="importProgressText"></span>
         </div>
 
-        <!-- Result -->
         <div class="import-result" id="importResult">
           <div class="import-result-title" id="importResultTitle"></div>
           <div id="importResultBody"></div>
         </div>
 
-      </div><!-- /import-panel-body -->
-    </div><!-- /import-panel -->
-
-    <!-- Form Panel: Tambah / Edit -->
-    <?php if ($aksi === 'tambah' || $aksi === 'edit'): ?>
+      </div></div><?php if ($aksi === 'tambah' || $aksi === 'edit'): ?>
     <?php
     // Siapkan data universitas untuk JS (id, label, isLainnya)
     $univJS = [];
@@ -629,7 +614,6 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
       <form method="POST" action="alumni.php" id="alumniForm" onsubmit="return validateAlumniForm()">
         <?php if ($editRow): ?><input type="hidden" name="id" value="<?= $editRow['id'] ?>"><?php endif; ?>
 
-        <!-- Nama + NISN -->
         <div class="form-grid" style="margin-bottom:16px;">
           <div class="f-group">
             <label>Nama Lengkap *</label>
@@ -643,16 +627,13 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
           </div>
         </div>
 
-        <!-- Universitas — searchable combobox -->
         <div class="form-grid" style="margin-bottom:16px;">
           <div class="f-group" style="grid-column:span 2;">
             <label>Universitas / Perguruan Tinggi *</label>
 
-            <!-- Hidden field yang dikirim ke server -->
             <input type="hidden" name="universitas_id" id="univHiddenId" value="<?= $editUnivId ?: '' ?>">
             <input type="hidden" name="universitas_nama_baru" id="univHiddenNamaBaru" value="">
 
-            <!-- Combobox wrapper -->
             <div class="combobox-wrap" id="univComboWrap">
               <div class="combobox-input-row">
                 <i class="fa-solid fa-building-columns combobox-icon"></i>
@@ -671,11 +652,9 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
                 <i class="fa-solid fa-chevron-down combobox-arrow" id="univArrow"></i>
               </div>
               <ul class="combobox-list" id="univDropdown" style="display:none;">
-                <!-- Diisi JS -->
-              </ul>
+                </ul>
             </div>
 
-            <!-- Field "Lainnya" — muncul saat pilih universitas lainnya -->
             <div class="univ-lainnya-wrap" id="univLainnyaWrap" style="display:none;">
               <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
                 <i class="fa-solid fa-pen-to-square" style="color:var(--accent);font-size:13px;flex-shrink:0;"></i>
@@ -697,7 +676,6 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
           </div>
         </div>
 
-        <!-- Prodi + Jalur + Angkatan -->
         <div class="form-grid form-grid-3" style="margin-bottom:20px;">
           <div class="f-group" style="grid-column:span 1;">
             <label>Program Studi *</label>
@@ -731,14 +709,12 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
       </form>
     </div>
 
-    <!-- Data universitas untuk combobox JS -->
     <script>
     const UNIV_LIST = <?= json_encode($univJS, JSON_UNESCAPED_UNICODE) ?>;
     </script>
 
     <?php endif; ?>
 
-    <!-- Filter & Search -->
     <form method="GET" action="alumni.php">
       <div class="filter-row">
         <div class="search-admin">
@@ -768,7 +744,6 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
       </div>
     </form>
 
-    <!-- Table -->
     <div class="card">
       <div class="table-wrap" style="overflow-x:unset;">
         <table class="data-table" style="width:100%;table-layout:fixed;">
@@ -825,7 +800,7 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
                 <div class="action-btns">
                   <a href="?action=edit&id=<?= $a['id'] ?>" class="btn-icon blue-icon" title="Edit"><i class="fa-solid fa-pen"></i></a>
                   <a href="?action=delete&id=<?= $a['id'] ?>" class="btn-icon red-icon" title="Hapus"
-                    onclick="return confirm('Yakin hapus data <?= addslashes($a['nama']) ?>?')">
+                    onclick="return confirm('Yakin hapus data <?= addslashes($a['nama']) ?> secara permanen?')">
                     <i class="fa-solid fa-trash"></i>
                   </a>
                 </div>
@@ -837,7 +812,6 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
         </table>
       </div>
 
-      <!-- Pagination -->
       <?php if ($pages > 1): ?>
       <div class="pagination-admin">
         <?php $qs = http_build_query(['q'=>$search,'jalur'=>$jalurF,'angkatan'=>$angkatanF]); ?>
@@ -856,10 +830,7 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
     </div>
 
   </main>
-</div><!-- /main-wrap -->
-
-<!-- SheetJS untuk parsing XLSX di browser -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</div><script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="../../js/admin.js"></script>
 <script>
 // ════════════════════════════════════════════════════════════
