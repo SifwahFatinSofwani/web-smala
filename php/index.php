@@ -6,11 +6,18 @@
 // ============================================================
 require_once __DIR__ . '/config/db.php';
 
+// ── Ambil filter angkatan ──
+$filterAngkatan = $_GET['angkatan'] ?? '';
+
 // ── Query data untuk peta bubble D3 (hanya kampus ber-koordinat) ──
 $mapData = [];
 try {
     $db   = getDB();
-    $stmt = $db->query("
+    
+    // Ambil daftar angkatan untuk dropdown
+    $listAngkatan = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='aktif' ORDER BY angkatan DESC")->fetchAll(PDO::FETCH_COLUMN);
+
+    $sqlMap = "
         SELECT
             u.kode,
             u.nama,
@@ -19,6 +26,7 @@ try {
             COALESCE(u.pulau, 'Lainnya') AS pulau,
             u.lat,
             u.lng,
+            a.angkatan,
             COUNT(a.id)                       AS jumlah,
             SUM(a.jalur = 'SNBP')             AS snbp,
             SUM(a.jalur = 'SNBT')             AS snbt,
@@ -30,10 +38,12 @@ try {
           AND u.lng IS NOT NULL
           AND u.lat != 0
           AND u.lng != 0
-        GROUP BY u.id
+        GROUP BY u.id, a.angkatan
         HAVING jumlah > 0
         ORDER BY jumlah DESC
-    ");
+    ";
+    
+    $stmt = $db->query($sqlMap);
     $mapData = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     // fallback ke array kosong — peta tetap tampil tanpa bubble
@@ -331,7 +341,22 @@ try {
               Ukuran lingkaran proporsional dengan jumlah alumni. Arahkan kursor ke tiap lingkaran untuk detail lengkap.
             </p>
           </div>
-          <div>
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <!-- Dropdown Filter Angkatan -->
+            <div class="custom-dropdown" id="mapAngkatanDropdown">
+              <div class="dropdown-selected" id="mapAngkatanSelected">
+                <span><?= $filterAngkatan ? 'Angkatan ' . htmlspecialchars($filterAngkatan) : 'Semua Angkatan' ?></span>
+                <i class="fa-solid fa-chevron-down"></i>
+              </div>
+              <div class="dropdown-options" id="mapAngkatanOptions">
+                <div class="dropdown-option <?= $filterAngkatan === '' ? 'active' : '' ?>" data-value="">Semua Angkatan <i class="fa-solid fa-check check-icon"></i></div>
+                <?php foreach($listAngkatan as $akt): ?>
+                <div class="dropdown-option <?= $filterAngkatan == $akt ? 'active' : '' ?>" data-value="<?= $akt ?>">Angkatan <?= htmlspecialchars($akt) ?> <i class="fa-solid fa-check check-icon"></i></div>
+                <?php endforeach; ?>
+              </div>
+            </div>
+
+            <!-- Dropdown Filter Jenis Kampus -->
             <div class="custom-dropdown" id="mapFilterDropdown">
               <div class="dropdown-selected" id="mapFilterSelected">
                 <span>Semua Kampus</span>
@@ -748,6 +773,7 @@ try {
           'pulau'   => $u['pulau']   ?? 'Lainnya',
           'lat'     => (float)($u['lat'] ?? 0),
           'lng'     => (float)($u['lng'] ?? 0),
+          'angkatan'=> (string)($u['angkatan'] ?? ''),
           'jumlah'  => (int)$u['jumlah'],
           'snbp'    => (int)($u['snbp']    ?? 0),
           'snbt'    => (int)($u['snbt']    ?? 0),
@@ -801,7 +827,8 @@ try {
     const filterSelected = document.getElementById('mapFilterSelected');
     const filterOptions  = document.getElementById('mapFilterOptions');
     let countriesData;
-    let currentFilter = '';
+    let currentJenisFilter = '';
+    let currentAngkatanFilter = '';
     
     const W = wrap.clientWidth || 860;
     const H = Math.round(W * 0.44);
@@ -815,44 +842,64 @@ try {
 
     d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(world => {
       countriesData = topojson.feature(world, world.objects.countries);
-      renderMap('');
+      renderMap();
       
-      // Custom Dropdown Logic
+      const angkatanDropdown = document.getElementById('mapAngkatanDropdown');
+      const angkatanSelected = document.getElementById('mapAngkatanSelected');
+      const angkatanOptions  = document.querySelectorAll('#mapAngkatanOptions .dropdown-option');
+
+      // Custom Dropdown Logic (Jenis Kampus)
       if (filterDropdown && filterSelected && filterOptions) {
         filterSelected.addEventListener('click', (e) => {
           e.stopPropagation();
           filterDropdown.classList.toggle('open');
+          if (angkatanDropdown) angkatanDropdown.classList.remove('open');
         });
 
-        const opts = filterOptions.querySelectorAll('.dropdown-option');
-        opts.forEach(opt => {
+        filterOptions.querySelectorAll('.dropdown-option').forEach(opt => {
           opt.addEventListener('click', () => {
-            opts.forEach(o => o.classList.remove('active'));
+            filterOptions.querySelectorAll('.dropdown-option').forEach(o => o.classList.remove('active'));
             opt.classList.add('active');
             const val = opt.getAttribute('data-value');
-            const text = opt.childNodes[0].textContent.trim();
-            filterSelected.querySelector('span').textContent = text;
+            filterSelected.querySelector('span').textContent = val ? opt.textContent.trim() : 'Semua Kampus';
             filterDropdown.classList.remove('open');
-            
-            if (currentFilter !== val) {
-              currentFilter = val;
-              renderMap(val);
-            }
+            currentJenisFilter = val;
+            renderMap();
           });
         });
+      }
 
-        document.addEventListener('click', (e) => {
-          if (!filterDropdown.contains(e.target)) {
-            filterDropdown.classList.remove('open');
-          }
+      // Custom Dropdown Logic (Angkatan)
+      if (angkatanDropdown && angkatanSelected && angkatanOptions) {
+        angkatanSelected.addEventListener('click', (e) => {
+          e.stopPropagation();
+          angkatanDropdown.classList.toggle('open');
+          if (filterDropdown) filterDropdown.classList.remove('open');
+        });
+
+        angkatanOptions.forEach(opt => {
+          opt.addEventListener('click', () => {
+            angkatanOptions.forEach(o => o.classList.remove('active'));
+            opt.classList.add('active');
+            const val = opt.getAttribute('data-value');
+            angkatanSelected.querySelector('span').textContent = val ? opt.textContent.trim() : 'Semua Angkatan';
+            angkatanDropdown.classList.remove('open');
+            currentAngkatanFilter = val;
+            renderMap();
+          });
         });
       }
+
+      document.addEventListener('click', (e) => {
+        if (filterDropdown && !filterDropdown.contains(e.target)) filterDropdown.classList.remove('open');
+        if (angkatanDropdown && !angkatanDropdown.contains(e.target)) angkatanDropdown.classList.remove('open');
+      });
     }).catch(() => {
       document.getElementById('d3-indonesia-map').innerHTML =
         '<div class="map-loading-state"><i class="fa-solid fa-triangle-exclamation"></i> Gagal memuat peta. Periksa koneksi.</div>';
     });
 
-    function renderMap(jenisFilter) {
+    function renderMap() {
       d3.select('#d3-indonesia-map').html('');
       const svg = d3.select('#d3-indonesia-map')
         .append('svg')
@@ -877,29 +924,45 @@ try {
         .attr('fill', '#dbeafe').attr('stroke', '#93c5fd').attr('stroke-width', 1);
 
       let filteredData = UNIV_DATA;
-      if (jenisFilter) {
-        filteredData = filteredData.filter(u => u.jenis === jenisFilter);
+      if (currentJenisFilter) {
+        filteredData = filteredData.filter(u => u.jenis === currentJenisFilter);
+      }
+      if (currentAngkatanFilter) {
+        filteredData = filteredData.filter(u => u.angkatan === currentAngkatanFilter);
       }
 
-      if (filteredData.length === 0) {
+      // Agregasi karena data UNIV_DATA sekarang pecah per angkatan
+      let mapObj = {};
+      filteredData.forEach(u => {
+        if (!mapObj[u.kode]) {
+          mapObj[u.kode] = {...u, jumlah:0, snbp:0, snbt:0, mandiri:0};
+        }
+        mapObj[u.kode].jumlah += u.jumlah;
+        mapObj[u.kode].snbp += u.snbp;
+        mapObj[u.kode].snbt += u.snbt;
+        mapObj[u.kode].mandiri += u.mandiri;
+      });
+      let mapArr = Object.values(mapObj);
+
+      if (mapArr.length === 0) {
         svg.append('text')
            .attr('x', W/2).attr('y', H/2)
            .attr('text-anchor','middle')
            .attr('font-size', 14).attr('font-weight','600')
            .attr('font-family',"'Plus Jakarta Sans',sans-serif")
            .attr('fill','#64748b')
-           .text(UNIV_DATA.length === 0 ? 'Belum ada data kampus dengan koordinat.' : 'Tidak ada kampus yang sesuai filter.');
+           .text('Tidak ada kampus yang sesuai filter.');
         return;
       }
 
       const rScale = d3.scaleSqrt()
-        .domain([0, d3.max(filteredData, d => d.jumlah)])
+        .domain([0, d3.max(mapArr, d => d.jumlah)])
         .range([0, 36]);
 
       const origin = proj([SAMARINDA.lng, SAMARINDA.lat]);
 
       // Garis putus
-      filteredData.forEach(u => {
+      mapArr.forEach(u => {
         if (Math.abs(u.lat - SAMARINDA.lat) < 0.1 && Math.abs(u.lng - SAMARINDA.lng) < 0.1) return;
         const pt = proj([u.lng, u.lat]);
         svg.append('line')
@@ -910,7 +973,7 @@ try {
       });
 
       // Bubble
-      filteredData.forEach(u => {
+      mapArr.forEach(u => {
         const pt  = proj([u.lng, u.lat]);
         const r   = rScale(u.jumlah);
         const isSamarinda = Math.abs(u.lat - SAMARINDA.lat) < 0.5 && Math.abs(u.lng - SAMARINDA.lng) < 0.5;
@@ -1175,6 +1238,8 @@ try {
       }
     });
   })();
+
+
 
   /* ─── Hero Search ─── */
   (function() {

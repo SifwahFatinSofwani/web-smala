@@ -56,14 +56,21 @@ function geocodeUniversitas(string $nama, string $kota): array {
             . urlencode($q)
             . '&format=json&limit=1&countrycodes=id';
 
-        $ctx = stream_context_create(['http' => [
-            'header'  => "User-Agent: PortalAlumniSMAN5Samarinda/1.0 (contact@sman5samarinda.sch.id)\r\n",
-            'timeout' => 6,
-            'method'  => 'GET',
-        ]]);
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        // Nominatim mewajibkan User-Agent yang valid
+        curl_setopt($ch, CURLOPT_USERAGENT, 'PortalAlumniSMAN5Samarinda/1.0 (contact@sman5samarinda.sch.id)');
+        curl_setopt($ch, CURLOPT_TIMEOUT, 6);
+        // Hindari masalah sertifikat SSL di local (Laragon/XAMPP)
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 
-        $raw = @file_get_contents($url, false, $ctx);
-        if ($raw) {
+        $raw = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        @curl_close($ch); // Hindari deprecated warning di PHP 8+
+
+        if ($raw && $httpCode === 200) {
             $data = json_decode($raw, true);
             if (!empty($data[0]['lat']) && !empty($data[0]['lon'])) {
                 return [
@@ -72,7 +79,7 @@ function geocodeUniversitas(string $nama, string $kota): array {
                 ];
             }
         }
-        // Jeda 1 detik agar tidak spam ke Nominatim
+        // Jeda 1 detik agar tidak spam ke Nominatim (Rate Limit)
         sleep(1);
     }
 
@@ -107,19 +114,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             // ── Auto-geocoding ──────────────────────────────
-            // Cek apakah sudah ada koordinat (untuk edit)
-            $existingLat = null; $existingLng = null; $existingPulau = null;
+            // Cek apakah sudah ada koordinat dan ambil kota sebelumnya (untuk edit)
+            $existingLat = null; $existingLng = null; $existingPulau = null; $existingKota = null;
             if ($id) {
-                $existing = $db->prepare('SELECT lat, lng, pulau FROM universitas WHERE id=?');
+                $existing = $db->prepare('SELECT kota, lat, lng, pulau FROM universitas WHERE id=?');
                 $existing->execute([$id]);
                 $existingRow = $existing->fetch();
-                $existingLat   = $existingRow['lat']   ?? null;
-                $existingLng   = $existingRow['lng']   ?? null;
-                $existingPulau = $existingRow['pulau'] ?? null;
+                if ($existingRow) {
+                    $existingKota  = $existingRow['kota']  ?? '';
+                    $existingLat   = $existingRow['lat']   ?? null;
+                    $existingLng   = $existingRow['lng']   ?? null;
+                    $existingPulau = $existingRow['pulau'] ?? null;
+                }
             }
 
-            // Geocode hanya jika belum ada koordinat atau kota berubah
-            $needGeocode = ($existingLat === null || $existingLng === null) && $kota;
+            // Geocode jika belum ada koordinat ATAU kota berubah
+            $needGeocode = false;
+            if ($kota) {
+                if ($id) {
+                    $needGeocode = ($existingLat === null || $existingLng === null || strtolower($existingKota) !== strtolower($kota));
+                } else {
+                    $needGeocode = true;
+                }
+            }
+            
             $geo = ['lat' => $existingLat, 'lng' => $existingLng];
 
             if ($needGeocode) {
@@ -154,8 +172,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $msg = ($msg ?: 'Data universitas berhasil diperbarui.') . ($geoMsg ?? '');
                     $msgType = $msgType ?: 'success';
                 } else {
-                    $db->prepare('INSERT INTO universitas (nama, kota, logo, lat, lng, pulau, jenis) VALUES (?,?,?,?,?,?,?)')
-                       ->execute([$nama, $kota, $logoPath, $lat, $lng, $pulau, $_POST['jenis'] ?? 'PTN']);
+                    $kode = 'UNIV_' . strtoupper(substr(md5(time() . $nama), 0, 6)); // Generate kode unik
+                    $db->prepare('INSERT INTO universitas (kode, nama, kota, logo, lat, lng, pulau, jenis) VALUES (?,?,?,?,?,?,?,?)')
+                       ->execute([$kode, $nama, $kota, $logoPath, $lat, $lng, $pulau, $_POST['jenis'] ?? 'PTN']);
                     $msg = ($msg ?: 'Universitas baru berhasil ditambahkan.') . ($geoMsg ?? '');
                     $msgType = $msgType ?: 'success';
                 }
@@ -300,7 +319,63 @@ $noCoordCount = $db->query("SELECT COUNT(*) FROM universitas WHERE lat IS NULL")
         background:#fff;
         box-shadow:0 0 0 4px rgba(59,108,244,.15), 0 0 0 1px var(--accent);
     }
-    .f-group input[type="file"]{padding:7px 14px;font-size:12.5px;background:#fff;}
+    
+    /* Modern File Upload */
+    .file-upload-wrapper { position: relative; width: 100%; }
+    .file-upload-input { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10; }
+    .file-upload-box { 
+      display: flex; width: 100%; border: 2px dashed #cbd5e1; border-radius: 8px; background: #f8fafc; 
+      padding: 9px 12px; transition: all .2s ease; cursor: pointer; 
+      overflow: hidden; position: relative; height: 42px; align-items: center; justify-content: center;
+    }
+    .file-upload-wrapper:hover .file-upload-box, .file-upload-input:focus + .file-upload-box { 
+        border-color: var(--accent); background: #eff6ff; 
+    }
+    #logoUploadPrompt { display: flex; flex-direction: row; align-items: center; gap: 8px; pointer-events: none; }
+    #logoUploadPrompt i { font-size: 16px; color: var(--accent); transition: transform .2s ease; }
+    .file-upload-wrapper:hover #logoUploadPrompt i { transform: translateY(-2px); }
+    #logoUploadPrompt span { font-size: 13.5px; font-weight: 600; color: var(--text-soft); }
+    #logoUploadPrompt small { display: none; }
+    #logoPreviewWrapper { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+    #logoPreview { max-height: 26px; max-width: 100%; object-fit: contain; }
+    
+    /* Modern Custom Select */
+    .custom-select-wrapper { position: relative; user-select: none; width: 100%; }
+    .custom-select {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 10px 14px; background: var(--bg); border: 2px solid transparent;
+        border-radius: 8px; font-family: var(--font); font-size: 13.5px;
+        font-weight: 600; color: var(--text); cursor: pointer;
+        box-shadow: inset 0 1px 2px rgba(0,0,0,.03), 0 0 0 1px var(--border);
+        transition: all 0.2s ease; height: 42px;
+    }
+    .custom-select:hover { box-shadow: inset 0 1px 2px rgba(0,0,0,.03), 0 0 0 1px #cbd5e1; }
+    .custom-select-wrapper.open .custom-select {
+        border-color: transparent; background: #fff;
+        box-shadow: 0 0 0 4px rgba(59,108,244,.15), 0 0 0 1px var(--accent);
+    }
+    .custom-select i { color: var(--accent); transition: transform 0.3s ease; font-size: 12px; }
+    .custom-select-wrapper.open .custom-select i { transform: rotate(180deg); }
+    .custom-select-options {
+        position: absolute; top: calc(100% + 6px); left: 0; width: 100%;
+        background: #fff; border-radius: 8px; border: 1px solid #e2e8f0;
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 100;
+        opacity: 0; visibility: hidden; transform: translateY(-10px);
+        transition: all 0.2s ease; overflow: hidden;
+    }
+    .custom-select-wrapper.open .custom-select-options {
+        opacity: 1; visibility: visible; transform: translateY(0);
+    }
+    .custom-select-option {
+        padding: 10px 14px; font-size: 13.5px; font-weight: 600; color: var(--text-soft);
+        cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+        transition: all 0.2s; border-bottom: 1px solid #f8fafc;
+    }
+    .custom-select-option:last-child { border-bottom: none; }
+    .custom-select-option:hover { background: #f8fafc; color: var(--accent); padding-left: 18px; }
+    .custom-select-option.selected { background: #eff6ff; color: var(--accent); font-weight: 700; }
+    .custom-select-option .check-icon { opacity: 0; transform: scale(0.8); transition: all 0.2s; }
+    .custom-select-option.selected .check-icon { opacity: 1; transform: scale(1); }
     
     .btn-save {
         padding:10px 24px;
@@ -439,18 +514,37 @@ $noCoordCount = $db->query("SELECT COUNT(*) FROM universitas WHERE lat IS NULL")
             <input type="text" name="kota" placeholder="Contoh: Samarinda"
               value="<?= $editRow ? htmlspecialchars($editRow['kota']) : '' ?>">
           </div>
-          <div class="f-group" style="flex:1;min-width:100px;">
+          <div class="f-group" style="flex:1;min-width:140px;">
             <label>Jenis Kampus</label>
-            <select name="jenis">
-              <option value="PTN" <?= ($editRow && ($editRow['jenis']??'') === 'PTN') ? 'selected' : '' ?>>PTN</option>
-              <option value="PTS" <?= ($editRow && ($editRow['jenis']??'') === 'PTS') ? 'selected' : '' ?>>PTS</option>
-              <option value="Kedinasan" <?= ($editRow && ($editRow['jenis']??'') === 'Kedinasan') ? 'selected' : '' ?>>Kedinasan</option>
-              <option value="Lainnya" <?= ($editRow && ($editRow['jenis']??'') === 'Lainnya') ? 'selected' : '' ?>>Lainnya</option>
-            </select>
+            <?php $currJenis = $editRow ? ($editRow['jenis'] ?? 'PTN') : 'PTN'; ?>
+            <div class="custom-select-wrapper" id="jenisDropdown">
+              <input type="hidden" name="jenis" id="jenisInput" value="<?= htmlspecialchars($currJenis) ?>">
+              <div class="custom-select" id="jenisSelect">
+                <span id="jenisText"><?= htmlspecialchars($currJenis) ?></span>
+                <i class="fa-solid fa-chevron-down"></i>
+              </div>
+              <div class="custom-select-options">
+                <div class="custom-select-option <?= $currJenis === 'PTN' ? 'selected' : '' ?>" data-value="PTN">PTN <i class="fa-solid fa-check check-icon"></i></div>
+                <div class="custom-select-option <?= $currJenis === 'PTS' ? 'selected' : '' ?>" data-value="PTS">PTS <i class="fa-solid fa-check check-icon"></i></div>
+                <div class="custom-select-option <?= $currJenis === 'Kedinasan' ? 'selected' : '' ?>" data-value="Kedinasan">Kedinasan <i class="fa-solid fa-check check-icon"></i></div>
+                <div class="custom-select-option <?= $currJenis === 'Lainnya' ? 'selected' : '' ?>" data-value="Lainnya">Lainnya <i class="fa-solid fa-check check-icon"></i></div>
+              </div>
+            </div>
           </div>
           <div class="f-group" style="flex:0 0 160px;">
             <label>Logo Kampus</label>
-            <input type="file" name="logo" accept="image/png, image/jpeg, image/webp">
+            <div class="file-upload-wrapper">
+              <input type="file" name="logo" id="logoUpload" accept="image/png, image/jpeg, image/webp" class="file-upload-input" onchange="previewLogo(this)">
+              <label for="logoUpload" class="file-upload-box">
+                <div id="logoPreviewWrapper" style="display: <?= ($editRow && !empty($editRow['logo'])) ? 'flex' : 'none' ?>;">
+                  <img id="logoPreview" src="<?= ($editRow && !empty($editRow['logo'])) ? '../../uploads/logos/'.htmlspecialchars($editRow['logo']) : '' ?>" alt="Preview">
+                </div>
+                <div id="logoUploadPrompt" style="display: <?= ($editRow && !empty($editRow['logo'])) ? 'none' : 'flex' ?>;">
+                  <i class="fa-solid fa-image"></i>
+                  <span>Pilih Logo</span>
+                </div>
+              </label>
+            </div>
           </div>
           <button type="submit" class="btn-save" style="margin-bottom:2px;">
             <i class="fa-solid fa-floppy-disk"></i> <?= $editRow ? 'Update' : 'Tambah' ?>
@@ -494,7 +588,7 @@ $noCoordCount = $db->query("SELECT COUNT(*) FROM universitas WHERE lat IS NULL")
               <th>Kota</th>
               <th>Pulau</th>
               <th>Koordinat Peta</th>
-              <th style="width:100px;">Aksi</th>
+              <th style="white-space:nowrap; width:130px;">Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -536,7 +630,7 @@ $noCoordCount = $db->query("SELECT COUNT(*) FROM universitas WHERE lat IS NULL")
                 <?php endif; ?>
               </td>
               <td>
-                <div class="action-btns" style="justify-content:flex-start;flex-wrap:wrap;gap:4px;">
+                <div class="action-btns" style="justify-content:flex-start;flex-wrap:nowrap;gap:6px;white-space:nowrap;">
                   <a href="?edit=<?= $u['id'] ?>" class="btn-icon blue-icon" title="Edit"><i class="fa-solid fa-pen"></i></a>
                   <?php if ($u['kota']): ?>
                   <form method="POST" style="display:contents;" onsubmit="return confirm('Cari ulang koordinat untuk <?= addslashes($u['nama']) ?>?')">
@@ -583,6 +677,59 @@ $noCoordCount = $db->query("SELECT COUNT(*) FROM universitas WHERE lat IS NULL")
     const a = document.getElementById('alertMsg');
     if (a) { a.style.opacity='0'; a.style.transition='opacity .4s'; setTimeout(()=>a.remove(),400); }
   }, 5000);
+
+  function previewLogo(input) {
+    const prompt = document.getElementById('logoUploadPrompt');
+    const previewWrapper = document.getElementById('logoPreviewWrapper');
+    const preview = document.getElementById('logoPreview');
+    
+    if (input.files && input.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        prompt.style.display = 'none';
+        previewWrapper.style.display = 'flex';
+        preview.src = e.target.result;
+      }
+      reader.readAsDataURL(input.files[0]);
+    } else {
+      document.getElementById('logoPreview').src = '';
+      document.getElementById('logoPreviewWrapper').style.display = 'none';
+      document.getElementById('logoUploadPrompt').style.display = 'flex';
+    }
+  }
+
+  // Custom Select Logic
+  document.addEventListener('DOMContentLoaded', function() {
+    const dropdown = document.getElementById('jenisDropdown');
+    const select = document.getElementById('jenisSelect');
+    const text = document.getElementById('jenisText');
+    const input = document.getElementById('jenisInput');
+    const options = dropdown.querySelectorAll('.custom-select-option');
+
+    // Toggle dropdown
+    select.addEventListener('click', function(e) {
+      e.stopPropagation();
+      dropdown.classList.toggle('open');
+    });
+
+    // Option click
+    options.forEach(opt => {
+      opt.addEventListener('click', function(e) {
+        e.stopPropagation();
+        options.forEach(o => o.classList.remove('selected'));
+        this.classList.add('selected');
+        const val = this.getAttribute('data-value');
+        text.textContent = val;
+        input.value = val;
+        dropdown.classList.remove('open');
+      });
+    });
+
+    // Close on outside click
+    document.addEventListener('click', function() {
+      dropdown.classList.remove('open');
+    });
+  });
 </script>
 </body>
 </html>

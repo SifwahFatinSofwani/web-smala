@@ -11,7 +11,7 @@ $db = getDB();
 // ── Statistik dari DB ─────────────────────────────────────────
 $totalAlumni   = $db->query("SELECT COUNT(*) FROM alumni WHERE status='aktif'")->fetchColumn();
 $totalUniv     = $db->query("SELECT COUNT(DISTINCT universitas_id) FROM alumni WHERE status='aktif'")->fetchColumn();
-$pendingLaporan= $db->query("SELECT COUNT(*) FROM laporan_masuk WHERE status='pending'")->fetchColumn();
+
 
 // Pengunjung hari ini (simulasi – bisa integrasikan dengan Google Analytics API)
 $todayVisitor  = rand(280, 420); // Ganti dengan data nyata
@@ -46,15 +46,6 @@ $tren = $db->query("
     GROUP BY angkatan ORDER BY angkatan
 ")->fetchAll(PDO::FETCH_KEY_PAIR);
 
-// Laporan masuk terbaru (pending)
-$laporanPending = $db->query("
-    SELECT l.*, u.nama AS univ_nama
-    FROM laporan_masuk l
-    JOIN universitas u ON l.universitas_id = u.id
-    WHERE l.status = 'pending'
-    ORDER BY l.submitted_at DESC
-    LIMIT 4
-")->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -74,7 +65,10 @@ $laporanPending = $db->query("
     .stat-card--blue .stat-label { color: #1a5570 !important; }
     .stat-card--blue .stat-value  { color: #0d3a52 !important; }
     .stat-card--blue .stat-change { color: #1a5570 !important; }
+    .stat-card--blue .stat-change { color: #1a5570 !important; }
 
+    /* Sesuaikan jumlah grid stats agar pas dengan 3 kartu */
+    .stats-grid { grid-template-columns: repeat(3, 1fr) !important; }
     /* Tabel tidak overflow horizontal */
     .data-table td { word-break: break-word; }
     .data-table td, .data-table th { white-space: normal !important; }
@@ -143,15 +137,7 @@ $laporanPending = $db->query("
             <span class="stat-change up">Kampus unik</span>
           </div>
         </div>
-        <div class="stat-card stat-card--blue">
-          <div class="stat-body">
-            <p class="stat-label">Laporan Pending</p>
-            <h3 class="stat-value"><?= $pendingLaporan ?></h3>
-            <span class="stat-change <?= $pendingLaporan > 0 ? 'down' : 'up' ?>">
-              <?= $pendingLaporan > 0 ? 'Perlu verifikasi' : 'Semua terproses' ?>
-            </span>
-          </div>
-        </div>
+
         <div class="stat-card">
           <div class="stat-body">
             <p class="stat-label">Pengunjung Hari Ini</p>
@@ -161,18 +147,6 @@ $laporanPending = $db->query("
         </div>
       </div>
 
-      <!-- Shortcut Alert jika ada laporan pending -->
-      <?php if ($pendingLaporan > 0): ?>
-      <div style="background:#fef9c3;border:1px solid #fde047;border-radius:var(--r-sm);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;font-weight:600;color:#92400e;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b;"></i>
-          Ada <strong><?= $pendingLaporan ?> laporan baru</strong> dari siswa yang menunggu verifikasi Anda.
-        </div>
-        <a href="laporan.php" style="background:#f59e0b;color:white;padding:6px 14px;border-radius:6px;text-decoration:none;font-size:12px;font-weight:700;white-space:nowrap;">
-          Review Sekarang →
-        </a>
-      </div>
-      <?php endif; ?>
 
       <!-- Content Grid -->
       <div class="content-grid">
@@ -249,57 +223,6 @@ $laporanPending = $db->query("
         <!-- Side Cards -->
         <div class="side-cards">
 
-          <!-- Laporan Pending -->
-          <div class="card">
-            <div class="card-header">
-              <h3><i class="fa-solid fa-inbox"></i> Laporan Pending</h3>
-              <?php if ($pendingLaporan > 0): ?>
-              <span class="badge-pill"><?= $pendingLaporan ?> Baru</span>
-              <?php endif; ?>
-            </div>
-            <div class="report-list">
-              <?php if (empty($laporanPending)): ?>
-              <div class="empty-state" style="padding:24px;">
-                <i class="fa-solid fa-check-circle" style="color:var(--green);"></i>
-                <p>Tidak ada laporan pending</p>
-              </div>
-              <?php else: ?>
-              <?php
-              $lpColors = [['#e0f2fe','#0369a1'],['#dcfce7','#166534'],['#ede9fe','#5b21b6'],['#fef9c3','#92400e']];
-              foreach ($laporanPending as $i => $l):
-                $lc   = $lpColors[$i % count($lpColors)];
-                $init = strtoupper(mb_substr($l['nama'], 0, 1));
-              ?>
-              <div class="report-item">
-                <div class="report-av" style="background:<?= $lc[0] ?>;color:<?= $lc[1] ?>;"><?= $init ?></div>
-                <div class="report-info">
-                  <strong><?= htmlspecialchars($l['nama']) ?></strong>
-                  <span><?= htmlspecialchars($l['universitas_nama']) ?></span>
-                </div>
-                <div class="report-actions">
-                  <form method="POST" action="laporan.php" style="display:contents;">
-                    <input type="hidden" name="laporan_id" value="<?= $l['id'] ?>">
-                    <input type="hidden" name="aksi" value="approve">
-                    <button type="submit" class="btn-xs green-btn" title="Setujui"><i class="fa-solid fa-check"></i></button>
-                  </form>
-                  <form method="POST" action="laporan.php" style="display:contents;">
-                    <input type="hidden" name="laporan_id" value="<?= $l['id'] ?>">
-                    <input type="hidden" name="aksi" value="reject">
-                    <button type="submit" class="btn-xs red-btn" title="Tolak"><i class="fa-solid fa-xmark"></i></button>
-                  </form>
-                </div>
-              </div>
-              <?php endforeach; ?>
-              <?php if ($pendingLaporan > 4): ?>
-              <div style="padding:10px 16px;border-top:1px solid var(--border);">
-                <a href="laporan.php" style="font-size:12px;font-weight:700;color:var(--accent);text-decoration:none;">
-                  +<?= $pendingLaporan - 4 ?> laporan lainnya →
-                </a>
-              </div>
-              <?php endif; ?>
-              <?php endif; ?>
-            </div>
-          </div>
 
           <!-- Distribusi Jalur -->
           <div class="card">
@@ -353,6 +276,36 @@ $laporanPending = $db->query("
                 <strong><?= $pct ?>%</strong>
               </div>
               <?php endforeach; ?>
+            </div>
+          </div>
+
+
+          <!-- Tren Alumni -->
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fa-solid fa-arrow-trend-up"></i> Tren Alumni (5 Tahun Terakhir)</h3>
+            </div>
+            <div style="padding: 20px; display:flex; flex-direction:column; gap:14px;">
+              <?php 
+              // Ambil 5 data terakhir
+              $tren5 = array_slice($tren, -5, 5, true);
+              $maxTren = !empty($tren5) ? max($tren5) : 1; 
+              foreach ($tren5 as $thn => $jml): 
+                $barW = round(($jml / $maxTren) * 100);
+              ?>
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                <div style="display:flex; justify-content:space-between; font-size:12.5px; font-weight:700; color:var(--text-soft);">
+                  <span>Angkatan <?= htmlspecialchars($thn) ?></span>
+                  <span><?= $jml ?> Lulusan</span>
+                </div>
+                <div style="width:100%; height:8px; background:var(--bg); border-radius:4px; overflow:hidden;">
+                  <div style="width:<?= $barW ?>%; height:100%; background:var(--accent); border-radius:4px; transition:width 1s ease;"></div>
+                </div>
+              </div>
+              <?php endforeach; ?>
+              <?php if (empty($tren)): ?>
+              <div style="text-align:center; font-size:12.5px; color:var(--muted); padding:10px;">Belum ada data tren.</div>
+              <?php endif; ?>
             </div>
           </div>
 

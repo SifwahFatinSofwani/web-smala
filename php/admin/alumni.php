@@ -154,7 +154,7 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
     @media(max-width:720px){.form-grid,.form-grid-3{grid-template-columns:1fr;}}
     .f-group{display:flex;flex-direction:column;gap:8px;}
     .f-group label{font-size:12.5px;font-weight:800;color:var(--text-soft);}
-    .f-group input, .f-group select {
+    .f-group input:not(.combobox-input), .f-group select {
         padding:10px 14px;
         border:2px solid transparent;
         border-radius:8px;
@@ -176,14 +176,44 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
         cursor:pointer;
         font-weight:600;
     }
-    .f-group input:hover, .f-group select:hover {
+    .f-group input:not(.combobox-input):hover, .f-group select:hover {
         box-shadow:inset 0 1px 2px rgba(0,0,0,.03), 0 0 0 1px #cbd5e1;
     }
-    .f-group input:focus, .f-group select:focus {
+    .f-group input:not(.combobox-input):focus, .f-group select:focus {
         border-color:transparent;
         background:#fff;
         box-shadow:0 0 0 4px rgba(59,108,244,.15), 0 0 0 1px var(--accent);
     }
+    
+    /* Custom Modern Dropdown Component */
+    .custom-dropdown { position: relative; font-family: var(--font); user-select: none; width: 100%; }
+    .custom-dropdown-selected {
+      padding: 10px 14px; background-color: var(--bg); border: 2px solid transparent; border-radius: 8px;
+      font-size: 13.5px; font-weight: 600; color: var(--text); cursor: pointer; display: flex;
+      justify-content: space-between; align-items: center; box-shadow: inset 0 1px 2px rgba(0,0,0,.03), 0 0 0 1px var(--border);
+      transition: all 0.2s ease;
+    }
+    .custom-dropdown-selected:hover { box-shadow: inset 0 1px 2px rgba(0,0,0,.03), 0 0 0 1px #cbd5e1; }
+    .custom-dropdown.open .custom-dropdown-selected { border-color: transparent; background: #fff; box-shadow: 0 0 0 4px rgba(59,108,244,.15), 0 0 0 1px var(--accent); }
+    .custom-dropdown-selected i { color: var(--text-soft); font-size: 13px; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    .custom-dropdown.open .custom-dropdown-selected i { transform: rotate(180deg); color: var(--accent); }
+    .custom-dropdown-options {
+      position: absolute; top: calc(100% + 6px); left: 0; right: 0; background-color: #ffffff; border-radius: 8px;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15), 0 8px 10px -6px rgba(0,0,0,0.1); overflow-y: auto; max-height: 240px;
+      opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 999; border: 1px solid var(--border);
+    }
+    .custom-dropdown.open .custom-dropdown-options { opacity: 1; visibility: visible; transform: translateY(0); }
+    .custom-dropdown-option {
+      padding: 10px 14px; font-size: 13.5px; font-weight: 600; color: var(--text-soft); cursor: pointer;
+      transition: all 0.2s ease; display: flex; align-items: center; justify-content: space-between;
+    }
+    .custom-dropdown-option:not(:last-child) { border-bottom: 1px solid #f1f5f9; }
+    .custom-dropdown-option:hover { background-color: #f8fafc; color: var(--accent); padding-left: 18px; }
+    .custom-dropdown-option.active { color: var(--accent); background-color: #eff6ff; font-weight: 700; }
+    .custom-dropdown-option .check-icon { opacity: 0; transform: scale(0.8); transition: all 0.2s ease; color: var(--accent); }
+    .custom-dropdown-option.active .check-icon { opacity: 1; transform: scale(1); }
+    
     .form-actions{display:flex;gap:12px;margin-top:12px;}
     
     .btn-save {
@@ -761,7 +791,7 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
           </div>
           <div class="f-group">
             <label>Jalur Masuk *</label>
-            <select name="jalur" required>
+            <select name="jalur" class="modern-select" required>
               <?php foreach (['SNBP','SNBT','Mandiri','Kedinasan'] as $j): ?>
               <option value="<?= $j ?>" <?= ($editRow && $editRow['jalur']===$j) ? 'selected' : '' ?>><?= $j ?></option>
               <?php endforeach; ?>
@@ -769,7 +799,7 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
           </div>
           <div class="f-group">
             <label>Tahun Lulus *</label>
-            <select name="angkatan" required>
+            <select name="angkatan" class="modern-select" required>
               <?php for ($y=(int)date('Y'); $y>=2015; $y--): ?>
               <option value="<?= $y ?>" <?= ($editRow && $editRow['angkatan']==$y) ? 'selected' : '' ?>><?= $y ?></option>
               <?php endfor; ?>
@@ -798,18 +828,18 @@ $angkatanList = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='a
           <i class="fa-solid fa-magnifying-glass" style="color:var(--muted);font-size:13px;"></i>
           <input type="text" name="q" value="<?= htmlspecialchars($search) ?>" placeholder="Cari nama, kampus, prodi...">
         </div>
-        <select name="jalur" class="select-filter" onchange="this.form.submit()">
+        <select name="jalur" class="select-filter modern-select" onchange="this.form.submit()">
           <option value="">Semua Jalur</option>
           <?php foreach (['SNBP','SNBT','Mandiri','Kedinasan'] as $j): ?>
           <option value="<?= $j ?>" <?= $jalurF===$j ? 'selected' : '' ?>><?= $j ?></option>
           <?php endforeach; ?>
         </select>
-        <select name="jenis" class="select-filter" onchange="this.form.submit()">
+        <select name="jenis" class="select-filter modern-select" onchange="this.form.submit()">
           <option value="">Semua Kampus</option>
           <option value="PTN" <?= $jenisF==='PTN' ? 'selected' : '' ?>>PTN</option>
           <option value="PTS" <?= $jenisF==='PTS' ? 'selected' : '' ?>>PTS</option>
         </select>
-        <select name="angkatan" class="select-filter" onchange="this.form.submit()">
+        <select name="angkatan" class="select-filter modern-select" onchange="this.form.submit()">
           <option value="">Semua Tahun</option>
           <?php foreach ($angkatanList as $y): ?>
           <option value="<?= $y ?>" <?= $angkatanF==$y ? 'selected' : '' ?>><?= $y ?></option>
@@ -1395,6 +1425,80 @@ setTimeout(() => {
 
   // Init edit mode
   if (hiddenId.value) { inputRow.classList.add('has-val'); clearBtn.style.display = 'flex'; }
-})();</script>
+})();
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('select.modern-select').forEach(select => {
+    select.style.display = 'none';
+    const wrapper = document.createElement('div');
+    wrapper.className = 'custom-dropdown';
+    if (select.classList.contains('select-filter')) {
+        wrapper.style.width = 'auto';
+        wrapper.style.minWidth = '160px';
+    }
+    select.parentNode.insertBefore(wrapper, select);
+    wrapper.appendChild(select);
+    
+    const selectedDiv = document.createElement('div');
+    selectedDiv.className = select.classList.contains('select-filter') ? 'select-filter' : 'custom-dropdown-selected';
+    if (select.classList.contains('select-filter')) {
+        selectedDiv.style.display = 'flex';
+        selectedDiv.style.justifyContent = 'space-between';
+        selectedDiv.style.alignItems = 'center';
+        selectedDiv.style.backgroundImage = 'none';
+        selectedDiv.style.paddingRight = '18px';
+    }
+
+    const selectedText = document.createElement('span');
+    const initialOption = select.options[select.selectedIndex];
+    selectedText.textContent = initialOption ? initialOption.text : select.options[0].text;
+    
+    const icon = document.createElement('i');
+    icon.className = 'fa-solid fa-chevron-down';
+    if (select.classList.contains('select-filter')) {
+        icon.style.marginLeft = '12px';
+        icon.style.color = 'var(--accent)';
+    }
+    
+    selectedDiv.appendChild(selectedText);
+    selectedDiv.appendChild(icon);
+    wrapper.appendChild(selectedDiv);
+    
+    const optionsDiv = document.createElement('div');
+    optionsDiv.className = 'custom-dropdown-options';
+    
+    Array.from(select.options).forEach((option, index) => {
+      const optDiv = document.createElement('div');
+      optDiv.className = 'custom-dropdown-option';
+      if(option.selected) optDiv.classList.add('active');
+      optDiv.innerHTML = `${option.text} <i class="fa-solid fa-check check-icon"></i>`;
+      optDiv.addEventListener('click', (e) => {
+        e.stopPropagation();
+        select.selectedIndex = index;
+        if (select.onchange) select.onchange(); 
+        else select.dispatchEvent(new Event('change'));
+        
+        selectedText.textContent = option.text;
+        wrapper.querySelectorAll('.custom-dropdown-option').forEach(el => el.classList.remove('active'));
+        optDiv.classList.add('active');
+        wrapper.classList.remove('open');
+      });
+      optionsDiv.appendChild(optDiv);
+    });
+    wrapper.appendChild(optionsDiv);
+    
+    selectedDiv.addEventListener('click', (e) => {
+      e.preventDefault(); e.stopPropagation();
+      document.querySelectorAll('.custom-dropdown.open').forEach(el => {
+        if(el !== wrapper) el.classList.remove('open');
+      });
+      wrapper.classList.toggle('open');
+    });
+  });
+  
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.custom-dropdown.open').forEach(el => el.classList.remove('open'));
+  });
+});
+</script>
 </body>
 </html>
