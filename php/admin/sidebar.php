@@ -54,26 +54,6 @@ function navActive(string $page, string $current): string {
       <span class="nav-text">Data Alumni</span>
     </a>
 
-    <!-- Laporan Masuk -->
-    <?php
-    // Hitung pending (cek dari DB jika tersedia)
-    $pendingCount = 0;
-    try {
-        $pdb = getDB();
-        $pendingCount = $pdb->query("SELECT COUNT(*) FROM laporan_masuk WHERE status='pending'")->fetchColumn();
-    } catch (Exception $e) {}
-    ?>
-    <a href="laporan.php" class="nav-item<?= navActive('laporan',$currentPage) ?>" data-tooltip="Laporan Masuk">
-      <span class="nav-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-        </svg>
-      </span>
-      <span class="nav-text">Laporan Masuk</span>
-      <?php if ($pendingCount > 0): ?>
-      <span class="badge-dot"><?= $pendingCount ?></span>
-      <?php endif; ?>
-    </a>
 
     <!-- Universitas -->
     <a href="universitas.php" class="nav-item<?= navActive('universitas',$currentPage) ?>" data-tooltip="Universitas">
@@ -85,16 +65,6 @@ function navActive(string $page, string $current): string {
       <span class="nav-text">Universitas</span>
     </a>
 
-    <!-- NISN Manager -->
-    <a href="nisn.php" class="nav-item<?= navActive('nisn',$currentPage) ?>" data-tooltip="Kelola NISN">
-      <span class="nav-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="2" y="5" width="20" height="14" rx="2"/>
-          <path d="M2 10h20"/>
-        </svg>
-      </span>
-      <span class="nav-text">Kelola NISN</span>
-    </a>
 
     <p class="nav-label">Konten</p>
 

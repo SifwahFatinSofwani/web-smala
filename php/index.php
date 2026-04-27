@@ -6,18 +6,27 @@
 // ============================================================
 require_once __DIR__ . '/config/db.php';
 
+// ── Ambil filter angkatan ──
+$filterAngkatan = $_GET['angkatan'] ?? '';
+
 // ── Query data untuk peta bubble D3 (hanya kampus ber-koordinat) ──
 $mapData = [];
 try {
     $db   = getDB();
-    $stmt = $db->query("
+    
+    // Ambil daftar angkatan untuk dropdown
+    $listAngkatan = $db->query("SELECT DISTINCT angkatan FROM alumni WHERE status='aktif' ORDER BY angkatan DESC")->fetchAll(PDO::FETCH_COLUMN);
+
+    $sqlMap = "
         SELECT
             u.kode,
             u.nama,
             u.kota,
+            u.jenis,
             COALESCE(u.pulau, 'Lainnya') AS pulau,
             u.lat,
             u.lng,
+            a.angkatan,
             COUNT(a.id)                       AS jumlah,
             SUM(a.jalur = 'SNBP')             AS snbp,
             SUM(a.jalur = 'SNBT')             AS snbt,
@@ -29,10 +38,12 @@ try {
           AND u.lng IS NOT NULL
           AND u.lat != 0
           AND u.lng != 0
-        GROUP BY u.id
+        GROUP BY u.id, a.angkatan
         HAVING jumlah > 0
         ORDER BY jumlah DESC
-    ");
+    ";
+    
+    $stmt = $db->query($sqlMap);
     $mapData = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Exception $e) {
     // fallback ke array kosong — peta tetap tampil tanpa bubble
@@ -114,6 +125,102 @@ try {
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="../css/style.css">
+  <style>
+    /* Custom Modern Dropdown for Map Filter */
+    .custom-dropdown {
+      position: relative;
+      min-width: 200px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      user-select: none;
+    }
+    .dropdown-selected {
+      padding: 10px 20px;
+      background-color: #ffffff;
+      border: 2px solid transparent;
+      border-radius: 999px;
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #1e293b;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .dropdown-selected:hover {
+      border-color: #e2e8f0;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+      transform: translateY(-2px);
+    }
+    .custom-dropdown.open .dropdown-selected {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+      transform: translateY(-2px);
+    }
+    .dropdown-selected i {
+      color: #3b82f6;
+      font-size: 14px;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .custom-dropdown.open .dropdown-selected i {
+      transform: rotate(180deg);
+    }
+    .dropdown-options {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 100;
+      border: 1px solid #e2e8f0;
+    }
+    .custom-dropdown.open .dropdown-options {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .dropdown-option {
+      padding: 12px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .dropdown-option:not(:last-child) {
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .dropdown-option:hover {
+      background-color: #f8fafc;
+      color: #3b82f6;
+      padding-left: 24px;
+    }
+    .dropdown-option.active {
+      color: #3b82f6;
+      background-color: #eff6ff;
+      font-weight: 700;
+    }
+    .dropdown-option .check-icon {
+      opacity: 0;
+      transform: scale(0.8);
+      transition: all 0.2s ease;
+    }
+    .dropdown-option.active .check-icon {
+      opacity: 1;
+      transform: scale(1);
+    }
+  </style>
 </head>
 <body class="bg-cross">
 
@@ -226,12 +333,43 @@ try {
 
       <!-- ── 2. PETA BUBBLE MAP D3 (data dari DB) ── -->
       <div style="margin-bottom:48px;">
-        <div class="section-header" style="margin-bottom:28px;">
-          <div class="section-eyebrow">Peta Interaktif</div>
-          <h2 class="section-title" style="font-size:26px;">Jejak Alumni se-Nusantara</h2>
-          <p class="section-subtitle">
-            Ukuran lingkaran proporsional dengan jumlah alumni. Arahkan kursor ke tiap lingkaran untuk detail lengkap.
-          </p>
+        <div class="section-header" style="margin-bottom:28px; display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
+          <div>
+            <div class="section-eyebrow">Peta Interaktif</div>
+            <h2 class="section-title" style="font-size:26px; margin-bottom:8px;">Jejak Alumni se-Nusantara</h2>
+            <p class="section-subtitle" style="margin:0;">
+              Ukuran lingkaran proporsional dengan jumlah alumni. Arahkan kursor ke tiap lingkaran untuk detail lengkap.
+            </p>
+          </div>
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <!-- Dropdown Filter Angkatan -->
+            <div class="custom-dropdown" id="mapAngkatanDropdown">
+              <div class="dropdown-selected" id="mapAngkatanSelected">
+                <span><?= $filterAngkatan ? 'Angkatan ' . htmlspecialchars($filterAngkatan) : 'Semua Angkatan' ?></span>
+                <i class="fa-solid fa-chevron-down"></i>
+              </div>
+              <div class="dropdown-options" id="mapAngkatanOptions">
+                <div class="dropdown-option <?= $filterAngkatan === '' ? 'active' : '' ?>" data-value="">Semua Angkatan <i class="fa-solid fa-check check-icon"></i></div>
+                <?php foreach($listAngkatan as $akt): ?>
+                <div class="dropdown-option <?= $filterAngkatan == $akt ? 'active' : '' ?>" data-value="<?= $akt ?>">Angkatan <?= htmlspecialchars($akt) ?> <i class="fa-solid fa-check check-icon"></i></div>
+                <?php endforeach; ?>
+              </div>
+            </div>
+
+            <!-- Dropdown Filter Jenis Kampus -->
+            <div class="custom-dropdown" id="mapFilterDropdown">
+              <div class="dropdown-selected" id="mapFilterSelected">
+                <span>Semua Kampus</span>
+                <i class="fa-solid fa-chevron-down"></i>
+              </div>
+              <div class="dropdown-options" id="mapFilterOptions">
+                <div class="dropdown-option active" data-value="">Semua Kampus <i class="fa-solid fa-check check-icon"></i></div>
+                <div class="dropdown-option" data-value="PTN">PTN (Negeri) <i class="fa-solid fa-check check-icon"></i></div>
+                <div class="dropdown-option" data-value="PTS">PTS (Swasta) <i class="fa-solid fa-check check-icon"></i></div>
+                <div class="dropdown-option" data-value="Kedinasan">Kedinasan <i class="fa-solid fa-check check-icon"></i></div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="viz-map-wrapper">
@@ -631,9 +769,11 @@ try {
           'kode'    => $u['kode']    ?? '',
           'nama'    => $u['nama']    ?? '',
           'kota'    => $u['kota']    ?? '',
+          'jenis'   => $u['jenis']   ?? 'PTN',
           'pulau'   => $u['pulau']   ?? 'Lainnya',
           'lat'     => (float)($u['lat'] ?? 0),
           'lng'     => (float)($u['lng'] ?? 0),
+          'angkatan'=> (string)($u['angkatan'] ?? ''),
           'jumlah'  => (int)$u['jumlah'],
           'snbp'    => (int)($u['snbp']    ?? 0),
           'snbt'    => (int)($u['snbt']    ?? 0),
@@ -683,6 +823,13 @@ try {
   (function() {
     const wrap    = document.getElementById('d3-indonesia-map');
     const tooltip = document.getElementById('bubbleTooltip');
+    const filterDropdown = document.getElementById('mapFilterDropdown');
+    const filterSelected = document.getElementById('mapFilterSelected');
+    const filterOptions  = document.getElementById('mapFilterOptions');
+    let countriesData;
+    let currentJenisFilter = '';
+    let currentAngkatanFilter = '';
+    
     const W = wrap.clientWidth || 860;
     const H = Math.round(W * 0.44);
 
@@ -693,53 +840,129 @@ try {
 
     const pathGen = d3.geoPath().projection(proj);
 
-    const svg = d3.select('#d3-indonesia-map')
-      .html('')
-      .append('svg')
-      .attr('viewBox', `0 0 ${W} ${H}`)
-      .attr('width', '100%')
-      .style('display', 'block');
-
-    svg.append('rect').attr('width', W).attr('height', H)
-       .attr('fill', '#dbeafe').attr('rx', 12);
-
     d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(world => {
-      const countries = topojson.feature(world, world.objects.countries);
+      countriesData = topojson.feature(world, world.objects.countries);
+      renderMap();
+      
+      const angkatanDropdown = document.getElementById('mapAngkatanDropdown');
+      const angkatanSelected = document.getElementById('mapAngkatanSelected');
+      const angkatanOptions  = document.querySelectorAll('#mapAngkatanOptions .dropdown-option');
+
+      // Custom Dropdown Logic (Jenis Kampus)
+      if (filterDropdown && filterSelected && filterOptions) {
+        filterSelected.addEventListener('click', (e) => {
+          e.stopPropagation();
+          filterDropdown.classList.toggle('open');
+          if (angkatanDropdown) angkatanDropdown.classList.remove('open');
+        });
+
+        filterOptions.querySelectorAll('.dropdown-option').forEach(opt => {
+          opt.addEventListener('click', () => {
+            filterOptions.querySelectorAll('.dropdown-option').forEach(o => o.classList.remove('active'));
+            opt.classList.add('active');
+            const val = opt.getAttribute('data-value');
+            filterSelected.querySelector('span').textContent = val ? opt.textContent.trim() : 'Semua Kampus';
+            filterDropdown.classList.remove('open');
+            currentJenisFilter = val;
+            renderMap();
+          });
+        });
+      }
+
+      // Custom Dropdown Logic (Angkatan)
+      if (angkatanDropdown && angkatanSelected && angkatanOptions) {
+        angkatanSelected.addEventListener('click', (e) => {
+          e.stopPropagation();
+          angkatanDropdown.classList.toggle('open');
+          if (filterDropdown) filterDropdown.classList.remove('open');
+        });
+
+        angkatanOptions.forEach(opt => {
+          opt.addEventListener('click', () => {
+            angkatanOptions.forEach(o => o.classList.remove('active'));
+            opt.classList.add('active');
+            const val = opt.getAttribute('data-value');
+            angkatanSelected.querySelector('span').textContent = val ? opt.textContent.trim() : 'Semua Angkatan';
+            angkatanDropdown.classList.remove('open');
+            currentAngkatanFilter = val;
+            renderMap();
+          });
+        });
+      }
+
+      document.addEventListener('click', (e) => {
+        if (filterDropdown && !filterDropdown.contains(e.target)) filterDropdown.classList.remove('open');
+        if (angkatanDropdown && !angkatanDropdown.contains(e.target)) angkatanDropdown.classList.remove('open');
+      });
+    }).catch(() => {
+      document.getElementById('d3-indonesia-map').innerHTML =
+        '<div class="map-loading-state"><i class="fa-solid fa-triangle-exclamation"></i> Gagal memuat peta. Periksa koneksi.</div>';
+    });
+
+    function renderMap() {
+      d3.select('#d3-indonesia-map').html('');
+      const svg = d3.select('#d3-indonesia-map')
+        .append('svg')
+        .attr('viewBox', `0 0 ${W} ${H}`)
+        .attr('width', '100%')
+        .style('display', 'block');
+
+      svg.append('rect').attr('width', W).attr('height', H)
+         .attr('fill', '#dbeafe').attr('rx', 12);
 
       svg.append('g').selectAll('path')
-        .data(countries.features)
+        .data(countriesData.features)
         .join('path')
         .attr('d', pathGen)
         .attr('fill', d => d.id === '360' ? '#bfdbfe' : '#e0eaf7')
         .attr('stroke', '#b8cfe0').attr('stroke-width', 0.4);
 
       svg.append('g').selectAll('path')
-        .data(countries.features.filter(d => d.id === '360'))
+        .data(countriesData.features.filter(d => d.id === '360'))
         .join('path')
         .attr('d', pathGen)
         .attr('fill', '#dbeafe').attr('stroke', '#93c5fd').attr('stroke-width', 1);
 
-      if (UNIV_DATA.length === 0) {
-        // Tampilkan pesan jika belum ada data
+      let filteredData = UNIV_DATA;
+      if (currentJenisFilter) {
+        filteredData = filteredData.filter(u => u.jenis === currentJenisFilter);
+      }
+      if (currentAngkatanFilter) {
+        filteredData = filteredData.filter(u => u.angkatan === currentAngkatanFilter);
+      }
+
+      // Agregasi karena data UNIV_DATA sekarang pecah per angkatan
+      let mapObj = {};
+      filteredData.forEach(u => {
+        if (!mapObj[u.kode]) {
+          mapObj[u.kode] = {...u, jumlah:0, snbp:0, snbt:0, mandiri:0};
+        }
+        mapObj[u.kode].jumlah += u.jumlah;
+        mapObj[u.kode].snbp += u.snbp;
+        mapObj[u.kode].snbt += u.snbt;
+        mapObj[u.kode].mandiri += u.mandiri;
+      });
+      let mapArr = Object.values(mapObj);
+
+      if (mapArr.length === 0) {
         svg.append('text')
            .attr('x', W/2).attr('y', H/2)
            .attr('text-anchor','middle')
            .attr('font-size', 14).attr('font-weight','600')
            .attr('font-family',"'Plus Jakarta Sans',sans-serif")
            .attr('fill','#64748b')
-           .text('Belum ada data kampus dengan koordinat. Tambahkan di panel Admin → Universitas.');
+           .text('Tidak ada kampus yang sesuai filter.');
         return;
       }
 
       const rScale = d3.scaleSqrt()
-        .domain([0, d3.max(UNIV_DATA, d => d.jumlah)])
+        .domain([0, d3.max(mapArr, d => d.jumlah)])
         .range([0, 36]);
 
       const origin = proj([SAMARINDA.lng, SAMARINDA.lat]);
 
-      // Garis putus dari Samarinda ke tiap kampus
-      UNIV_DATA.forEach(u => {
-        // Skip jika ini adalah Samarinda sendiri
+      // Garis putus
+      mapArr.forEach(u => {
         if (Math.abs(u.lat - SAMARINDA.lat) < 0.1 && Math.abs(u.lng - SAMARINDA.lng) < 0.1) return;
         const pt = proj([u.lng, u.lat]);
         svg.append('line')
@@ -749,11 +972,10 @@ try {
           .attr('stroke-dasharray', '4,3').attr('opacity', 0.55);
       });
 
-      // Bubble per universitas
-      UNIV_DATA.forEach(u => {
+      // Bubble
+      mapArr.forEach(u => {
         const pt  = proj([u.lng, u.lat]);
         const r   = rScale(u.jumlah);
-        // Merah untuk Samarinda (UNMUL/ITK), biru/ungu/cyan lainnya
         const isSamarinda = Math.abs(u.lat - SAMARINDA.lat) < 0.5 && Math.abs(u.lng - SAMARINDA.lng) < 0.5;
         const col = isSamarinda ? '#ef4444' : (COLOR_PULAU[u.pulau] || '#0891b2');
 
@@ -770,7 +992,7 @@ try {
           .on('mousemove', function(event) {
             const box = wrap.getBoundingClientRect();
             tooltip.innerHTML =
-              '<strong>' + u.nama + '</strong><br>' +
+              '<strong>' + u.nama + '</strong> (' + u.jenis + ')<br>' +
               '<span class="tt-jumlah">' + u.jumlah + ' alumni</span><br>' +
               '<span class="tt-detail">SNBP ' + u.snbp + ' · SNBT ' + u.snbt + ' · Mandiri ' + u.mandiri + '</span>';
             tooltip.style.opacity = '1';
@@ -789,7 +1011,7 @@ try {
           .text(u.jumlah);
       });
 
-      // Titik asal Samarinda
+      // Titik Samarinda
       svg.append('circle').attr('cx', origin[0]).attr('cy', origin[1])
         .attr('r', 8).attr('fill', '#ef4444').attr('stroke', 'white').attr('stroke-width', 2.5);
       svg.append('circle').attr('cx', origin[0]).attr('cy', origin[1])
@@ -800,11 +1022,7 @@ try {
         .attr('font-family', "'Plus Jakarta Sans', sans-serif")
         .attr('fill', '#1e293b')
         .text('SMAN 5 Samarinda');
-
-    }).catch(() => {
-      document.getElementById('d3-indonesia-map').innerHTML =
-        '<div class="map-loading-state"><i class="fa-solid fa-triangle-exclamation"></i> Gagal memuat peta. Periksa koneksi.</div>';
-    });
+    }
   })();
 
 
@@ -1020,6 +1238,8 @@ try {
       }
     });
   })();
+
+
 
   /* ─── Hero Search ─── */
   (function() {
